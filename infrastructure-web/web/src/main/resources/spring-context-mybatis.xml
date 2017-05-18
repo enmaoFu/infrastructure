@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- MyBatis SqlSessionFactoryBean 配置 -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+        <property name="plugins">
+            <array>
+                <!-- 
+                 | 分页插件配置 
+                 | 插件首先会根据方言查找实现类，如果未找到则使用自定义的实现类，两者均为配置则抛出异常
+                 | dialectType 数据库方言  
+                 |             默认支持  mysql|oracle
+                 | dialectClazz 方言实现类
+                 |              自定义需要实现 org.springagg.mybatis.IDialect接口
+                 | -->
+                <bean id="paginationInterceptor"
+                    class="net.oschina.archx.mybatis.plugins.PaginationInterceptor">
+                    <property name="dialectType" value="mysql" />
+                    <property name="dialectClazz" value="org.springagg.mybatis.dialect.MySqlDialect" />
+                </bean>
+            </array>
+        </property>
+        <!-- MAPPER 和 resultMap 配置路径 -->
+        <property name="mapperLocations">
+            <list>
+                <!-- 表示在classpath下mapper目录中以-mapper.xml结尾所有文件 -->
+                <value>classpath*:mapper/*/*-mapper.xml</value>
+            </list>
+        </property>
+        <!-- 扫描别名定义  多个包名以逗号或分号分隔 扫描指定包及其子包下的所有类 此处不支持通配符 -->
+        <property name="typeAliasesPackage" value="com.infrastructure.entity" />
+        <!-- 
+         | MyBatis配置文件  一般主要用来配置别名，本项目别名通过扫描typeAliasesPackage所以不需要配置文件了
+         | <property name="configLocation" value="classpath:mybatis-configuration.xml" />
+         | -->
+    </bean>
+
+    <!-- 
+     | MAPPER 扫描器配置
+     |
+     | 扫描在com.infrastructure.dao包下
+     | 所有继承 com.infrastructure.common.resposity.BaseMapper 接口的 Mapper 接口
+     |
+     | 使用接口标记
+     | <property name="markerInterface" value="com.infrastructure.common.resposity.BaseMapper" />
+     | 使用注解来标记 
+     | <property name="annotationClass" value="org.springframework.stereotype.Repository" />
+     | -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!-- 可以指定多个包名  以逗号或分号分隔 此处支持 com.infrastructure.**.dao 通配符写法-->
+        <property name="basePackage" value="com.infrastructure.dao" />
+        <!-- 标记 -->
+        <property name="annotationClass" value="org.springframework.stereotype.Repository" />
+        <property name="sqlSessionTemplateBeanName" value="sqlSessionTemplate" />
+    </bean>
+
+    <!--
+     | 通过模板定制 MyBatis 的行为 
+     |
+     | SIMPLE 执行器执行其它语句
+     | REUSE 执行器可能重复使用prepared statements 语句
+     | BATCH执行器可以重复执行语句和批量更新
+     | 注意 : 更新采用批量(BATCH)模式 insert delete 返回值将会为 -2147482646 配置和设定执行器
+     | -->
+    <bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate" scope="prototype">
+        <constructor-arg index="0" ref="sqlSessionFactory" />
+        <constructor-arg index="1" value="SIMPLE" />
+    </bean>
+</beans>

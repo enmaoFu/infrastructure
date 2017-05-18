@@ -1,0 +1,26 @@
+.content{
+    width:100%;
+	background-color: #00b2ed ;/*#1FB8ED*/
+    height: 100%;
+}
+.filterinput{
+    background-color:rgba(249, 244, 244, 0);
+    border-radius:15px;
+    width:90%;
+    height:30px;
+    border:thin solid #FFF;
+    text-indent:0.5em;
+    font-weight:bold;
+    color:#FFF;
+    margin-top: 10px;
+}
+#demo-list a{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    -o-text-overflow:ellipsis;
+    white-space:nowrap;
+    width:100%;
+}
+img{
+    border: 0px;
+}

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.infrastructure.dao.daily.RegimeMapper">
+
+    <resultMap id="ResultRegimeMap" type="com.infrastructure.entity.daily.Regime">
+        <id column="id" property="id" javaType="string" jdbcType="CHAR"/>
+        <result column="content" property="content"></result>
+        <result column="attachment" property="attachment"></result>
+        <result column="model" property="model"></result>
+        <result column="companyId" property="companyId"></result>
+        <result column="createTime" property="createTime"></result>
+        <result column="createUser" property="createUser"></result>
+        <result column="modelName" property="modelName"></result>
+        <association property="sysFile" javaType="SysFile" resultMap="ResultSysFileMap"></association>
+    </resultMap>
+
+    <resultMap id="ResultSysFileMap" type="com.infrastructure.entity.system.SysFile">
+        <id column="fid" property="id" javaType="string" jdbcType="CHAR" />
+        <result column="attachmentId" property="attachmentId"></result>
+        <result column="originalFileName" property="originalFileName"></result>
+        <result column="nowFileName" property="nowFileName"></result>
+        <result column="suff" property="suff"></result>
+    </resultMap>
+
+    <!--制度查询-->
+    <select id="load" resultMap="ResultRegimeMap" parameterType="com.infrastructure.entity.daily.Regime">
+        SELECT r.*,re.name modelName,f.id fid,attachmentId,originalFileName,nowFileName,suff FROM regime r
+        LEFT JOIN sys_resource re ON re.id = r.model
+        LEFT JOIN file f ON r.attachment = f.attachmentId
+        WHERE r.companyId = #{companyId}
+        ORDER BY r.createTime DESC
+    </select>
+
+    <!--根据ID查询-->
+    <select id="select" resultMap="ResultRegimeMap" parameterType="java.lang.String">
+         SELECT r.*,f.id fid,attachmentId,originalFileName,nowFileName,suff FROM regime r
+         LEFT JOIN file f ON r.attachment = f.attachmentId
+         WHERE r.id = #{id,javaType=String}
+    </select>
+
+    <!--根据所属模块查询制度-->
+    <select id="findByModel" resultMap="ResultRegimeMap" parameterType="java.util.Map">
+        SELECT r.id,r.content,r.model,r.companyId,r.createTime,r.createUser,f.id fid,attachmentId,originalFileName,nowFileName,suff
+        FROM regime r
+        LEFT JOIN file f ON r.attachment = f.attachmentId
+        WHERE r.model = #{model,javaType=String} AND r.companyId = #{companyId}
+    </select>
+
+    <!--新增-->
+    <insert id="insert" parameterType="com.infrastructure.entity.daily.Regime">
+        INSERT INTO regime (id,content,attachment,model,createTime,companyId,createUser)
+        VALUES (#{id,javaType=String},#{content},#{attachment},#{model},#{createTime},#{companyId},#{createUser})
+    </insert>
+
+    <!--修改-->
+    <update id="update" parameterType="com.infrastructure.entity.daily.Regime">
+        UPDATE regime
+        <set>
+            <if test="content != null and content != ''">
+                content = #{content},
+            </if>
+            <if test="attachment != null and attachment != ''">
+                attachment = #{attachment},
+            </if>
+            <if test="model != null and model != ''">
+                model = #{model},
+            </if>
+        </set>
+        WHERE id = #{id,javaType=String}
+    </update>
+
+    <!--删除-->
+    <delete id="deleteArray" parameterType="java.util.Arrays">
+        DELETE FROM regime WHERE id IN
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id,javaType=String}
+        </foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.infrastructure.dao.main.WorkbenchMapper">
+
+    <resultMap id="ResultWorkbenchMap" type="com.infrastructure.entity.main.Workbench">
+        <id column="id" property="id" javaType="string" jdbcType="CHAR"/>
+        <result column="content" property="content"></result>
+        <result column="mark" property="mark"></result>
+        <result column="userId" property="userId"></result>
+        <result column="planTime" property="planTime"></result>
+        <result column="companyId" property="companyId"></result>
+        <result column="aocId" property="aocId"></result>
+        <result column="state" property="state"></result>
+        <result column="fileId" property="fileId"></result>
+        <result column="fileName" property="fileName"></result>
+    </resultMap>
+
+    <!--查询待审批/个人计划/请假/指令-->
+    <select id="workbench" resultMap="ResultWorkbenchMap" parameterType="Workbench">
+      SELECT mark,id,content,apId,aocId,state,fileId,fileName FROM (
+            SELECT '我的申请' mark,a.id,a.content,'' apId,a.createTime,'' aocId,a.aState state,'' fileId,'' fileName
+            FROM approve a WHERE a.createUser = #{userId}
+            AND DATE_SUB(#{planTime}, interval 3 day) &lt;= a.createTime
+            UNION ALL
+            SELECT '待审批' mark,a.id,a.content,ap.id apId,ap.createTime,'' aocId,ap.apState state,'' fileId,'' fileName
+            FROM approve_process ap
+            JOIN approve a ON ap.approveId = a.id
+            WHERE ap.userId = #{userId} AND ap.apState = 'P'
+            UNION ALL
+            SELECT '个人计划' mark,c.id,c.detail_plan_content,'' apId,pd.createTime,'' aocId,'' state,'' fileId,'' fileName
+            FROM person_detail_plan c
+            JOIN personal_plan pd ON c.person_plan_id = pd.id
+            WHERE pd.user_id = #{userId} AND c.plan_completion_time LIKE CONCAT('%',#{planTime},'%')
+            UNION ALL
+            SELECT '我的请假' mark,afl.id,afl.applicant,'' apId,afl.createTime,'' aocId,afl.astate state,'' fileId,'' fileName
+            FROM ask_for_leave afl
+            WHERE afl.createUser = #{userId} AND DATE_SUB(#{planTime}, interval 3 day) &lt;= afl.createTime
+            UNION ALL
+            SELECT '请假审批' mark,afl.id,afl.applicant,'' apId,afl.createTime,aoc.id aocId,aoc.state state,'' fileId,'' fileName
+            FROM ask_for_leave afl
+            JOIN afl_out_check aoc ON afl.id = aoc.checkId
+            WHERE aoc.userId = #{userId} AND aoc.state = 'P'
+            UNION ALL
+            SELECT '收到指令' mark,c.id,c.content,'' apId,c.createTime,'' aocId,c.state,f.id fileId,f.originalFileName fileName
+            FROM instructions c
+            JOIN sys_company s ON c.companyId = s.id
+            JOIN sys_user u ON c.`createUser` = u.id
+            JOIN sys_dept ss ON u.deptId = ss.id
+            JOIN inst_receive_obj obj ON obj.`instId` = c.`id`
+            LEFT JOIN FILE f ON c.attachment = f.attachmentId
+            WHERE obj.userId = #{userId} AND c.state = 'N'
+            UNION ALL
+            SELECT '发送指令' mark,c.id,c.content,'' apId,c.createTime,'' aocId,c.state,f.id fileId,f.originalFileName fileName
+            FROM instructions c
+            JOIN sys_company s ON c.companyId = s.id
+            JOIN sys_user u ON c.`createUser` = u.id
+            JOIN sys_dept ss ON u.deptId = ss.id
+            LEFT JOIN FILE f ON c.attachment = f.attachmentId
+            WHERE c.`createUser` = #{userId}
+            AND c.`state` = 'N'
+      ) t ORDER BY state,t.createTime DESC
+    </select>
+</mapper>

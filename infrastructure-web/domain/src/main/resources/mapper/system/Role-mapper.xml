@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- NAMESPACE必须和接口的类路径一样 -->
+<mapper namespace="com.infrastructure.dao.system.RoleMapper">
+
+    <resultMap id="RoleResultMap" type="com.infrastructure.entity.system.Role">
+        <id column="id" property="id" javaType="String" jdbcType="CHAR"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="companyId" property="companyId" jdbcType="VARCHAR"/>
+        <result column="parentId" property="parentId" jdbcType="VARCHAR"/>
+        <result column="isManager" property="isManager" jdbcType="CHAR"/>
+        <result column="sorted" property="sorted" jdbcType="VARCHAR"/>
+        <result column="is_sys" property="isSys" jdbcType="VARCHAR"/>
+        <result column="companyName" property="companyName" jdbcType="CHAR"/>
+        <result column="deptId" property="deptId" jdbcType="CHAR"/>
+        <result column="deptName" property="deptName" jdbcType="CHAR"/>
+    </resultMap>
+
+
+    <!-- 查询所有角色 -->
+    <select id="findAll" resultMap="RoleResultMap" parameterType="Role" >
+        SELECT id,name,description,remark,companyId,companyName,deptId,deptName,isManager,sorted,is_sys FROM (
+        SELECT r.*,c.`name` companyName,d.`name` deptName FROM sys_role r
+        JOIN sys_company c ON r.companyId = c.id
+        LEFT JOIN sys_dept d ON d.id = r.deptId
+        <if test="companyId != null and companyId != ''">
+            WHERE r.companyId = #{companyId}
+        </if>
+        <if test="companyId == null or companyId == ''">
+            WHERE is_sys = 'Y'
+        </if>
+        ) t WHERE 1 = 1 ${where}
+    </select>
+
+    <!--新增角色-->
+    <insert id="insert" parameterType="com.infrastructure.entity.system.Role">
+        INSERT INTO sys_role (id,name,description,remark,companyId,deptId,parentId,isManager,sorted,is_sys)
+        VALUES (#{id,javaType=string},#{name},#{description},#{remark},#{companyId},#{deptId},#{parentId},#{isManager},#{sorted},#{isSys})
+    </insert>
+
+    <!--修改角色-->
+    <update id="update" parameterType="com.infrastructure.entity.system.Role">
+        update sys_role
+        <set>
+            <if test="name != null">
+                name = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="description != null">
+                description = #{description,jdbcType=VARCHAR},
+            </if>
+            <if test="remark != null">
+                remark = #{remark,jdbcType=VARCHAR},
+            </if>
+            <if test="companyId != null">
+                companyId = #{companyId,jdbcType=VARCHAR},
+            </if>
+            <if test="deptId != null">
+                deptId = #{deptId,jdbcType=VARCHAR},
+            </if>
+            <if test="parentId != null">
+                parentId = #{parentId,jdbcType=VARCHAR},
+            </if>
+            <if test="isManager != null">
+                isManager = #{isManager,jdbcType=CHAR},
+            </if>
+            <if test="sorted != null">
+                sorted = #{sorted,jdbcType=CHAR},
+            </if>
+            <if test="isSys != null">
+                is_sys = #{isSys,jdbcType=CHAR},
+            </if>
+        </set>
+        where id = #{id, javaType=string}
+    </update>
+
+    <!--角色赋权-->
+    <insert id="authorization" parameterType="java.util.List">
+        INSERT INTO sys_role_resources (id,roleId,resId)
+        <foreach collection="list" item="item" index="index" separator="union all">
+            SELECT #{item.id,javaType=String},#{item.roleId},#{item.resId} FROM dual
+        </foreach>
+    </insert>
+
+    <!--根据角色ID删除角色权限-->
+    <delete id="deleteRoleResource" parameterType="java.lang.String">
+        DELETE FROM sys_role_resources WHERE roleId = #{rId}
+    </delete>
+
+    <!--根据角色ID批量删除角色权限-->
+    <delete id="deleteRoleResourceArray" parameterType="java.lang.String">
+        DELETE FROM sys_role_resources WHERE roleId IN
+        <foreach collection="array" item="rid" open="(" separator="," close=")">
+            #{rid,jdbcType=CHAR}
+        </foreach>
+    </delete>
+
+    <!--根据用户ID查询拥有的角色-->
+    <select id="getRoleByUid" resultType="java.lang.String" parameterType="java.lang.String">
+        SELECT roleId FROM sys_user_roles WHERE userId = #{uId}
+    </select>
+    
+    <!-- 删除角色 -->
+    <delete id="delete" parameterType="string">
+        delete from sys_role where id = #{id,jdbcType=CHAR}
+    </delete>
+
+    <!--批量删除角色-->
+    <delete id="deleteArray" parameterType="String">
+        DELETE FROM sys_role WHERE id IN
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 获取角色 -->
+    <select id="select" resultMap="RoleResultMap" parameterType="java.lang.String">
+      select id,name,description,remark,companyId,deptId,parentId,isManager,sorted,is_sys from sys_role where id = #{id,jdbcType=CHAR}
+    </select>
+
+    <!-- 角色关联资源 -->
+    <insert id="contactWithResources" parameterType="com.infrastructure.entity.system.RoleResource">
+        insert into sys_role_resources(id, roleId, resId) values
+         <foreach collection="list" index="i" item="item" separator=",">
+             (#{item.id, javaType=string},#{item.roleId},#{item.resId})
+         </foreach>
+    </insert>
+
+    <!-- 清空角色资源关联 -->
+    <delete id="unContactWithResources" parameterType="string">
+        delete from sys_role_resources where roleId = #{roleId}
+    </delete>
+
+    <!-- 获取拥有的角色标识 -->
+    <select id="getOwnedResourceIds" parameterType="string" resultType="string">
+        select  resId from sys_role_resources where roleId = #{roleId}
+    </select>
+
+    <!-- 获取拥有的角色名称 -->
+    <select id="getRoles" resultType="string">
+        select name from sys_role where id in
+        <foreach collection="array" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <!-- 获取权限标识符 -->
+    <select id="getPermissions" resultType="string">
+        select
+        b.permission
+        from
+        sys_role_resources a
+        left join sys_resource b on a.resId = b.id
+        where
+        b.permission &lt;&gt; ''
+        and a.roleId in
+        <foreach collection="array" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <!-- 获取按钮权限标识 -->
+    <select id="getButtonPermissions" resultType="string">
+        SELECT b.`permission`
+        FROM sys_role_resources a LEFT JOIN sys_resource b ON a.`resId` = b.`id`
+        WHERE b.`permission` &lt;&gt; ''
+        AND b.`type` = 'BUTTON'
+        AND a.roleId in
+        <foreach collection="array" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <!-- 批量更新角色状态 -->
+    <update id="updateSateWithOutId" parameterType="string">
+        update sys_role set state = #{state} where schId =#{schId} and id &lt;&gt; #{id}
+    </update>
+
+    <!-- 是否允许 -->
+    <select id="isExists" parameterType="string" resultType="boolean">
+        select count(1) from sys_role where name = #{name}
+    </select>
+
+    <!-- 查找角色标识 -->
+    <select id="findRoleIdsByName" parameterType="string" resultType="string">
+        select id from sys_role where name = #{name}
+    </select>
+
+    <!-- 查找指派角色 -->
+    <select id="findAssignRoles" parameterType="com.infrastructure.entity.system.Role" resultMap="RoleResultMap">
+        select *
+        from sys_role where schId = #{schId} and name = #{name} and assign = 1
+    </select>
+
+    <!--根据企业ID查询角色-->
+    <select id="findByCid" resultMap="RoleResultMap" parameterType="java.lang.String">
+        SELECT * FROM sys_role WHERE companyId = #{companyId} ORDER BY sorted
+    </select>
+
+    <!-- 根据userId查询部门编号 -->
+    <select id="queryRolesListByUserId" parameterType="com.infrastructure.entity.system.Role" resultMap="RoleResultMap">
+        SELECT DISTINCT s.*,d.name deptName FROM sys_role s
+        LEFT JOIN sys_dept d ON d.id = s.deptId
+        LEFT JOIN sys_user_roles r ON s.id = r.roleId
+        INNER JOIN target t ON r.userId = t.user_id
+        WHERE t.user_id = #{userId}
+    </select>
+</mapper>

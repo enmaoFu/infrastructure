@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.infrastructure.dao.order.InstructionsMapper" >
+  <resultMap id="InstructionsResultMap" type="com.infrastructure.entity.order.Instructions" >
+    <id column="id" property="id" jdbcType="VARCHAR" />
+    <result column="content" property="content" jdbcType="VARCHAR" />
+    <result property="createtime" column="createTime" jdbcType="TIMESTAMP"></result>
+    <result column="createUser" property="createuser" jdbcType="VARCHAR" />
+    <result column="companyId" property="companyid" jdbcType="VARCHAR" />
+    <result column="state" property="state" jdbcType="VARCHAR" />
+    <result column="user_name" property="userName" jdbcType="VARCHAR" />
+    <result column="co_name" property="coName" jdbcType="VARCHAR" />
+    <result column="us_id" property="usId" jdbcType="VARCHAR" />
+    <result column="us_name" property="usName" jdbcType="VARCHAR" />
+    <result column="deptId" property="deptId" jdbcType="VARCHAR" />
+    <result column="send_name" property="sendName" jdbcType="VARCHAR" />
+    <result column="feedCreateTime" property="feedCreateTime" jdbcType="TIMESTAMP" />
+    <result column="feed_name" property="feedName" jdbcType="VARCHAR" />
+    <result column="feed_id" property="feedId" jdbcType="VARCHAR" />
+    <result column="objUserId" property="objUserId" jdbcType="VARCHAR" />
+    <result column="objId" property="objId" jdbcType="VARCHAR" />
+    <result column="attachment" property="attachment" jdbcType="VARCHAR" />
+    <result column="originalFileName" property="originalFileName" jdbcType="VARCHAR" />
+    <association property="sysFile" javaType="SysFile" resultMap="ResultSysFileMap"></association>
+  </resultMap>
+
+  <resultMap id="ResultSysFileMap" type="com.infrastructure.entity.system.SysFile">
+    <id column="fid" property="id" javaType="string" jdbcType="CHAR" />
+    <result column="attachmentId" property="attachmentId"></result>
+    <result column="originalFileName" property="originalFileName"></result>
+    <result column="nowFileName" property="nowFileName"></result>
+    <result column="suff" property="suff"></result>
+  </resultMap>
+
+  <sql id="Base_Column_List" >
+    id, content, createTime, createUser, companyId, state
+  </sql>
+
+  <!--新增指令-->
+  <insert id="insert" parameterType="com.infrastructure.entity.order.Instructions" >
+    insert into instructions (id, content, createTime,
+      createUser, companyId, state, attachment
+      )
+    values (#{id,jdbcType=VARCHAR}, #{content,jdbcType=VARCHAR}, SYSDATE(),
+      #{createuser,jdbcType=VARCHAR}, #{companyid,jdbcType=VARCHAR}, #{state,jdbcType=VARCHAR}, #{attachment,jdbcType=VARCHAR}
+      )
+  </insert>
+
+  <!--修改指令-->
+  <update id="update" parameterType="com.infrastructure.entity.order.Instructions" >
+    update instructions
+    <set >
+      <if test="content != null" >
+        content = #{content,jdbcType=VARCHAR},
+      </if>
+      <if test="createtime != null" >
+        createTime = #{createtime,jdbcType=VARCHAR},
+      </if>
+      <if test="createuser != null" >
+        createUser = #{createuser,jdbcType=VARCHAR},
+      </if>
+      <if test="companyid != null" >
+        companyId = #{companyid,jdbcType=VARCHAR},
+      </if>
+      <if test="state != null" >
+        state = #{state,jdbcType=VARCHAR},
+      </if>
+      <if test="attachment != null" >
+        attachment = #{attachment,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+
+  <!--确认指令完成-->
+  <update id="confirm" parameterType="java.util.Map">
+    update instructions
+    <set>
+      state = 'Y'
+    </set>
+    where id IN
+    <foreach collection="ids" item="id" open="(" separator="," close=")">
+      #{id}
+    </foreach>
+  </update>
+  <!--批量删除指令-->
+  <delete id="deleteBatch">
+    DELETE FROM instructions WHERE id IN
+    <foreach collection="array" item="id" open="(" separator="," close=")">
+      #{id}
+    </foreach>
+  </delete>
+  <!-- 查找回馈 -->
+  <select id="queryList" resultMap="InstructionsResultMap" resultType="com.infrastructure.entity.order.Instructions">
+    SELECT
+    c.id,
+    c.content,
+    c.createTime,
+    c.createUser,
+    c.companyId,
+    c.state,
+    c.attachment,
+    u.username user_name,
+    s.name co_name,
+    f.originalFileName originalFileName,
+    (SELECT
+      GROUP_CONCAT(re.`userId`) uid
+    FROM
+      inst_receive_obj re
+      INNER JOIN sys_user us
+        ON us.`id` = re.`userId`
+    WHERE re.`instId` = c.`id` AND re.`parentId` = ''
+    GROUP BY re.`instId`) us_id,
+    (SELECT
+      GROUP_CONCAT(us.`username`) uname
+    FROM
+      inst_receive_obj re
+      INNER JOIN sys_user us
+        ON us.`id` = re.`userId`
+    WHERE re.`instId` = c.`id` AND re.`parentId` = ''
+    GROUP BY re.`instId`) us_name,
+    ss.id deptId
+    FROM
+    instructions c
+    LEFT JOIN sys_company s
+      ON c.companyId = s.id
+    INNER JOIN sys_user u
+      ON c.`createUser` = u.id
+    LEFT JOIN sys_dept ss
+      ON u.deptId = ss.id
+    LEFT JOIN FILE f
+      ON c.attachment = f.attachmentId
+    WHERE 1 = 1 ${where}
+  </select>
+
+  <!-- 查找收到指令 -->
+  <select id="queryInstReceiveObjList" resultMap="InstructionsResultMap" resultType="com.infrastructure.entity.order.Instructions">
+    SELECT
+    c.id,
+    c.content,
+    c.createTime,
+    c.createUser,
+    c.companyId,
+    c.state,
+    u.username send_name,
+    s.name co_name,
+    obj.userId objUserId,
+    f.originalFileName originalFileName,
+    obj.id objId
+    FROM
+    instructions c
+    LEFT JOIN sys_company s
+    ON c.companyId = s.id
+    INNER JOIN sys_user u
+    ON c.`createUser` = u.id
+    LEFT JOIN sys_dept ss
+    ON u.deptId = ss.id
+    LEFT JOIN inst_receive_obj obj
+    ON obj.`instId` = c.`id`
+    LEFT JOIN FILE f
+    ON c.attachment = f.attachmentId
+    WHERE 1 = 1 ${where}
+  </select>
+
+  <!-- 转发指令列表 -->
+  <select id="queryForwardList" resultMap="InstructionsResultMap" resultType="com.infrastructure.entity.order.Instructions">
+    SELECT
+    c.id,
+    c.content,
+    c.createTime feedCreateTime,
+    c.createUser,
+    c.companyId,
+    c.state,
+    u.username send_name,
+    f.originalFileName originalFileName,
+    (SELECT
+      GROUP_CONCAT(re.`userId`) uid
+    FROM
+      inst_receive_obj re
+      INNER JOIN sys_user us
+        ON us.`id` = re.`userId`
+    WHERE re.`instId` = c.`id` AND re.`parentId` = #{id}
+    GROUP BY re.`instId`) feed_id,
+    (SELECT
+      GROUP_CONCAT(us.`username`) uname
+    FROM
+      inst_receive_obj re
+      INNER JOIN sys_user us
+        ON us.`id` = re.`userId`
+    WHERE re.`instId` = c.`id` AND re.`parentId` = #{id}
+    GROUP BY re.`instId`) feed_name
+    FROM
+    instructions c
+    LEFT JOIN sys_company s
+    ON c.companyId = s.id
+    INNER JOIN sys_user u
+    ON c.`createUser` = u.id
+    LEFT JOIN sys_dept ss
+    ON u.deptId = ss.id
+    LEFT JOIN inst_receive_obj obj
+    ON obj.`instId` = c.`id`
+    LEFT JOIN FILE f
+      ON c.attachment = f.attachmentId
+    WHERE 1 = 1 ${where}
+  </select>
+  <!-- 获取回馈 -->
+  <select id="getById" resultMap="InstructionsResultMap" parameterType="java.lang.String">
+    SELECT
+    c.id,
+    c.content,
+    c.createTime,
+    c.createUser,
+    c.companyId,
+    c.state,
+    c.attachment,
+    u.username user_name,
+    s.name co_name,
+    f.originalFileName originalFileName,
+    (SELECT
+    GROUP_CONCAT(re.`userId`) uid
+    FROM
+    inst_receive_obj re
+    INNER JOIN sys_user us
+    ON us.`id` = re.`userId`
+    WHERE re.`instId` = c.`id` AND re.`parentId` = ''
+    GROUP BY re.`instId`) us_id,
+    (SELECT
+    GROUP_CONCAT(us.`username`) uname
+    FROM
+    inst_receive_obj re
+    INNER JOIN sys_user us
+    ON us.`id` = re.`userId`
+    WHERE re.`instId` = c.`id` AND re.`parentId` = ''
+    GROUP BY re.`instId`) us_name,
+    ss.id deptId
+    FROM
+    instructions c
+    LEFT JOIN sys_company s
+    ON c.companyId = s.id
+    INNER JOIN sys_user u
+    ON c.`createUser` = u.id
+    LEFT JOIN sys_dept ss
+    ON u.deptId = ss.id
+    LEFT JOIN FILE f
+    ON c.attachment = f.attachmentId
+    <where>
+      c.id = #{id, javaType=string}
+    </where>
+  </select>
+</mapper>

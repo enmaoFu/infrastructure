@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.infrastructure.dao.daily.AnnouncementMapper">
+
+    <resultMap id="ResultAnnMap" type="com.infrastructure.entity.daily.Announcement">
+        <id column="id" property="id" javaType="string" jdbcType="CHAR"/>
+        <result column="title" property="title"></result>
+        <result column="content" property="content"></result>
+        <result column="attachment" property="attachment"></result>
+        <result column="arange" property="arange"></result>
+        <result column="releaseTime" property="releaseTime"></result>
+        <result column="companyId" property="companyId"></result>
+        <result column="createTime" property="createTime"></result>
+        <result column="abbreviation" property="abbreviation"></result>
+        <result column="isView" property="isView"></result>
+        <result column="userId" property="userId"></result>
+        <result column="model" property="model"></result>
+        <result column="modelName" property="modelName"></result>
+        <association property="sysFile" javaType="SysFile" resultMap="ResultSysFileMap"></association>
+    </resultMap>
+
+    <resultMap id="ResultSysFileMap" type="com.infrastructure.entity.system.SysFile">
+        <id column="fid" property="id" javaType="string" jdbcType="CHAR" />
+        <result column="attachmentId" property="attachmentId"></result>
+        <result column="originalFileName" property="originalFileName"></result>
+        <result column="nowFileName" property="nowFileName"></result>
+        <result column="suff" property="suff"></result>
+    </resultMap>
+
+    <!--根据企业ID查询通知公司-->
+    <select id="queryPage" resultMap="ResultAnnMap" parameterType="Announcement">
+        SELECT ann.id,ann.title,ann.content,ann.model,ann.arange,ann.releaseTime,ann.companyId,ann.createTime,attachmentId,originalFileName,nowFileName,suff,re.name modelName
+        FROM announcement ann
+        LEFT JOIN sys_resource re ON re.id = ann.model
+        LEFT JOIN file f ON ann.attachment = f.attachmentId
+        WHERE ann.companyId = #{companyId}
+        <if test="title != null and title != ''">
+            AND ann.title LIKE CONCAT('%',#{title},'%')
+        </if>
+        ORDER BY ann.releaseTime DESC,ann.createTime DESC
+    </select>
+
+    <!--查询本公司公告和关联公司公告-->
+    <select id="queryMyAndAll" resultMap="ResultAnnMap" parameterType="Announcement">
+        SELECT an.id,an.title,an.content,an.model,an.arange,an.releaseTime,an.companyId,an.createTime,com.abbreviation,attachmentId,originalFileName,nowFileName,suff,iv.isView
+        FROM announcement an
+        JOIN sys_company com ON com.id = an.companyId
+        LEFT JOIN file f ON an.attachment = f.attachmentId
+        LEFT JOIN is_view iv ON iv.viewId = an.id AND iv.userId = #{userId}
+        WHERE (an.companyId = #{companyId} AND an.arange = 'my' ) OR an.arange = 'all'
+        ORDER BY releaseTime DESC
+    </select>
+
+    <!--根据ID查询通知公告-->
+    <select id="select" resultMap="ResultAnnMap" parameterType="Announcement">
+        SELECT an.id,an.title,an.content,an.attachment,an.model,an.arange,an.releaseTime,an.companyId,an.createTime,attachmentId,originalFileName,nowFileName,suff
+        FROM announcement an
+        LEFT JOIN file f ON an.attachment = f.attachmentId
+        WHERE an.id = #{_parameter}
+    </select>
+
+    <!--根据模块ID查询通知公告-->
+    <select id="queryByModel" resultMap="ResultAnnMap" parameterType="java.util.Map">
+        SELECT an.id,an.title,an.content,an.attachment,an.model,an.arange,an.releaseTime,an.companyId,an.createTime,attachmentId,originalFileName,nowFileName,suff
+        FROM announcement an
+        LEFT JOIN file f ON an.attachment = f.attachmentId
+        WHERE an.companyId = #{companyId} AND an.model = #{model} AND an.releaseTime IS NOT NULL AND an.releaseTime &lt;&gt; ''
+        ORDER BY an.releaseTime DESC limit 1
+    </select>
+    <!--新增-->
+    <insert id="insert" parameterType="Announcement">
+        INSERT INTO announcement (id,title,content,model,attachment,arange,releaseTime,companyId,createTime)
+        VALUES (#{id,javaType=String},#{title},#{content},#{model},#{attachment},#{arange},#{releaseTime},#{companyId},#{createTime})
+    </insert>
+
+    <!--修改-->
+    <update id="update" parameterType="Announcement">
+        UPDATE announcement
+        <set>
+            <if test="title != null and title != ''">title=#{title},</if>
+            <if test="content != null and content != ''">content=#{content},</if>
+            <if test="attachment != null and attachment != ''">attachment=#{attachment},</if>
+            <if test="arange != null and arange != ''">arange=#{arange},</if>
+            <if test="model != null and model != ''">model=#{model},</if>
+            <if test="releaseTime != null and releaseTime != ''">releaseTime=#{releaseTime},</if>
+        </set>
+        WHERE id = #{id,javaType=String}
+    </update>
+
+    <!--删除-->
+    <delete id="deleteArray" parameterType="java.lang.String">
+        DELETE FROM announcement WHERE id IN
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id,jdbcType=CHAR}
+        </foreach>
+    </delete>
+</mapper>

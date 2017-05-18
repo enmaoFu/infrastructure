@@ -1,0 +1,2 @@
+mvn install:install-file -Dfile=taobao-sdk-java-auto.jar -DgroupId=org.taobao.sdk -DartifactId=taobao-sdk-java-auto -Dversion=1.0 -Dpackaging=jar
+mvn install:install-file -Dfile=taobao-sdk-java-auto-source.jar -DgroupId=org.taobao.sdk -DartifactId=taobao-sdk-java-auto-source -Dversion=1.0 -Dpackaging=jar

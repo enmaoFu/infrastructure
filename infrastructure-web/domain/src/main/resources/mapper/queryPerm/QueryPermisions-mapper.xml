@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- NAMESPACE必须和接口的类路径一样 -->
+<mapper namespace="com.infrastructure.dao.queryPerm.QueryPermissionsMapper">
+
+    <resultMap id="QueryPermissionsResultMap" type="com.infrastructure.entity.queryPerm.QueryPermissions">
+        <id column="id" property="id" javaType="string" jdbcType="VARCHAR"/>
+        <result property="permName" column="perm_name" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="permIdentification" column="perm_identification" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="remark" column="remark" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="createTime" column="createTime" javaType="Date" jdbcType="TIMESTAMP"></result>
+        <result property="deptName" column="dept_name" javaType="String" ></result>
+        <result property="userName" column="username" javaType="String" ></result>
+        <result property="coName" column="co_name" javaType="String" ></result>
+        <result property="perm1" column="perm1" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="perm2" column="perm2" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="perm3" column="perm3" javaType="String" jdbcType="VARCHAR"></result>
+    </resultMap>
+
+    <sql id="BaseColumn">
+        id, perm_name, perm_identification, remark, createTime, perm1, perm2, perm3
+    </sql>
+    <!--新增查询权限-->
+    <insert id="insert" parameterType="com.infrastructure.entity.queryPerm.QueryPermissions">
+        INSERT INTO query_permissions (
+        id,
+        perm_name,
+        perm_identification,
+        remark,
+        createTime,
+        perm1,
+        perm2,
+        perm3
+        )
+        VALUES  (
+        #{id, javaType=string},
+        #{permName},
+        #{permIdentification},
+        #{remark},
+        SYSDATE(),
+        #{perm1},
+        #{perm2},
+        #{perm3}
+        )
+    </insert>
+
+    <!--修改查询权限-->
+    <update id="update" parameterType="com.infrastructure.entity.queryPerm.QueryPermissions">
+        update query_permissions
+        <set>
+            <if test="permName != null">
+                perm_name = #{permName,jdbcType=VARCHAR},
+            </if>
+            <if test="permIdentification != null">
+                perm_identification = #{permIdentification,jdbcType=VARCHAR},
+            </if>
+            <if test="remark != null">
+                remark = #{remark,jdbcType=VARCHAR},
+            </if>
+            <if test="perm1 != null">
+                perm1 = #{perm1,jdbcType=VARCHAR},
+            </if>
+            <if test="perm2 != null">
+                perm2 = #{perm2,jdbcType=VARCHAR},
+            </if>
+            <if test="perm3 != null">
+                perm3 = #{perm3,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id, javaType=string}
+    </update>
+
+    <!--删除查询权限-->
+    <delete id="delete">
+        DELETE FROM query_permissions WHERE id = #{id, javaType=string}
+    </delete>
+
+    <!--批量删除查询权限-->
+    <delete id="deleteBatch">
+        DELETE FROM query_permissions WHERE id IN
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 获取查询权限列表 -->
+    <select id="queryList" resultMap="QueryPermissionsResultMap" resultType="com.infrastructure.entity.queryPerm.QueryPermissions">
+        SELECT
+        p.id,
+        p.perm_name,
+        p.perm_identification,
+        p.remark,
+        p.createTime,
+        p.perm1,
+        p.perm2,
+        p.perm3,
+        c.name co_name
+        FROM query_permissions p
+        LEFT JOIN sys_company c ON c.id = p.perm1
+        WHERE 1 = 1 ${where}
+    </select>
+
+    <!-- 获取查询权限 -->
+    <select id="getById" resultMap="QueryPermissionsResultMap" parameterType="java.lang.String">
+        SELECT
+        p.id,
+        p.perm_name,
+        p.perm_identification,
+        p.remark,
+        p.createTime,
+        p.perm1,
+        p.perm2,
+        p.perm3,
+        c.name co_name
+        FROM query_permissions p
+        LEFT JOIN sys_company c ON c.id = p.perm1
+        <where>
+            p.id = #{id, javaType=string}
+        </where>
+    </select>
+
+
+    <!-- 获取查询权限 -->
+    <select id="queryPermissionsListByUser" resultMap="QueryPermissionsResultMap" parameterType="java.util.HashMap">
+        SELECT
+        p.id,
+        p.perm_name,
+        p.perm_identification,
+        p.remark,
+        p.createTime,
+        p.perm1,
+        p.perm2,
+        p.perm3,
+        c.name co_name
+        FROM query_permissions p
+        <if test="userId != null">
+        LEFT JOIN query_user_permissions u ON u.perm_id = p.id
+        </if>
+        LEFT JOIN sys_company c ON c.id = p.perm1
+        <where>
+            1=1
+            <if test="userId != null">
+            AND u.user_id = #{userId}
+            </if>
+            <if test="perm1 != null">
+            AND p.perm1 = #{perm1}
+            </if>
+        </where>
+    </select>
+</mapper>

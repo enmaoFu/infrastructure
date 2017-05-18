@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- NAMESPACE必须和接口的类路径一样 -->
+<mapper namespace="com.infrastructure.dao.queryPerm.QueryUserPermissionsMapper">
+
+    <resultMap id="QueryUserPermissionsResultMap" type="com.infrastructure.entity.queryPerm.QueryUserPermissions">
+        <id column="perm_id" property="permId" javaType="string" jdbcType="VARCHAR"/>
+        <id column="user_id" property="userId" javaType="string" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!--新增目标管理-->
+    <insert id="insert" parameterType="com.infrastructure.entity.queryPerm.QueryUserPermissions">
+        INSERT INTO query_user_permissions (
+        perm_id,
+        user_id
+        )
+        VALUES  (
+        #{permId, javaType=string},
+        #{userId, javaType=string}
+        )
+    </insert>
+</mapper>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/infrastructure-web/domain/domain.iml" filepath="$PROJECT_DIR$/infrastructure-web/domain/domain.iml" />
+      <module fileurl="file://$PROJECT_DIR$/infrastructure.iml" filepath="$PROJECT_DIR$/infrastructure.iml" />
+      <module fileurl="file://$PROJECT_DIR$/infrastructure-common/infrastructure-common.iml" filepath="$PROJECT_DIR$/infrastructure-common/infrastructure-common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/infrastructure-extra/infrastructure-extra.iml" filepath="$PROJECT_DIR$/infrastructure-extra/infrastructure-extra.iml" />
+      <module fileurl="file://$PROJECT_DIR$/infrastructure-web/infrastructure-web.iml" filepath="$PROJECT_DIR$/infrastructure-web/infrastructure-web.iml" />
+      <module fileurl="file://$PROJECT_DIR$/infrastructure-web/service/service.iml" filepath="$PROJECT_DIR$/infrastructure-web/service/service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/infrastructure-web/web/web.iml" filepath="$PROJECT_DIR$/infrastructure-web/web/web.iml" />
+    </modules>
+  </component>
+</project>

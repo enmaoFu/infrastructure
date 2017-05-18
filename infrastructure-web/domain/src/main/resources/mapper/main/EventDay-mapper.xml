@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.infrastructure.dao.main.EventDayMapper">
+
+    <resultMap id="ResultEventDayMap" type="com.infrastructure.entity.main.EventDay">
+        <id column="id" property="id" javaType="string" jdbcType="CHAR"/>
+        <result column="title" property="title"></result>
+        <result column="day" property="day"></result>
+        <result column="dtime" property="dtime"></result>
+        <result column="userId" property="userId"></result>
+        <result column="createTime" property="createTime"></result>
+    </resultMap>
+
+    <!--根据用户ID和事件日期查询-->
+    <select id="load" resultMap="ResultEventDayMap" parameterType="EventDay">
+        SELECT id,title,day,dtime,userId,createTime FROM event_day WHERE userId = #{userId} AND day = #{day} ORDER BY dtime
+    </select>
+
+    <insert id="insert" parameterType="EventDay">
+        INSERT INTO event_day (id,title,day,dtime,userId,createTime)
+        VALUES (#{id,javaType=String},#{title},#{day},#{dtime},#{userId},#{createTime})
+    </insert>
+
+
+    <select id="findByUId" resultMap="ResultEventDayMap" parameterType="java.lang.String">
+        SELECT id,title,day,dtime,userId,createTime FROM event_day WHERE userId = #{userId}
+    </select>
+
+    <delete id="delete" parameterType="java.lang.String">
+        DELETE FROM event_day WHERE id = #{id,javaType=String}
+    </delete>
+</mapper>

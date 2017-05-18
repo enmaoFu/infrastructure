@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- NAMESPACE必须和接口的类路径一样 -->
+<mapper namespace="com.infrastructure.dao.system.ResourceMapper">
+
+    <resultMap id="BaseResultMap" type="com.infrastructure.entity.system.Resource">
+        <id property="id" javaType="String" column="id"/>
+        <result property="name" column="name"/>
+        <result property="type" column="type" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+        <result property="icon" column="icon" />
+        <result property="permission" column="permission"/>
+        <result property="url" column="url"/>
+        <result property="parentId" column="parentId"/>
+        <result property="available" column="available" javaType="boolean" jdbcType="BIT"/>
+        <result property="sorted" column="sorted"/>
+    </resultMap>
+
+    <!-- 创建资源 -->
+    <insert id="insert" parameterType="Resource">
+        insert into sys_resource
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+                id,name,type,
+            <if test="icon != null" >
+                icon,
+            </if>
+            <if test="permission != null" >
+                permission,
+            </if>
+            <if test="icon != null and icon != ''" >
+                icon,
+            </if>
+            <if test="url != null" >
+                url,
+            </if>
+            <if test="parentId != null" >
+                parentId,
+            </if>
+            <if test="available != null" >
+                available,
+            </if>
+            <if test="sorted != null" >
+                sorted,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+                #{id,javaType=String,jdbcType=CHAR},
+                #{name,jdbcType=VARCHAR},
+                #{type,jdbcType=VARCHAR,typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+            <if test="icon != null" >
+                #{icon,jdbcType=VARCHAR},
+            </if>
+            <if test="permission != null" >
+                #{permission,jdbcType=VARCHAR},
+            </if>
+            <if test="icon != null and icon != ''" >
+                #{icon,jdbcType=VARCHAR},
+            </if>
+            <if test="url != null" >
+                #{url,jdbcType=VARCHAR},
+            </if>
+            <if test="parentId != null" >
+                #{parentId,jdbcType=CHAR},
+            </if>
+            <if test="available != null" >
+                #{available,jdbcType=BIT},
+            </if>
+            <if test="sorted != null" >
+                #{sorted,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <!-- 编辑资源 -->
+    <update id="update" parameterType="Resource">
+        update sys_resource
+        <set >
+            <if test="name != null" >
+                name = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="type != null" >
+                type = #{type,jdbcType=VARCHAR,typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+            </if>
+            <if test="icon != null" >
+                icon = #{icon,jdbcType=VARCHAR},
+            </if>
+            <if test="permission != null" >
+                permission = #{permission,jdbcType=VARCHAR},
+            </if>
+            <if test="url != null" >
+                url = #{url,jdbcType=VARCHAR},
+            </if>
+            <if test="parentId != null" >
+                parentId = #{parentId,jdbcType=CHAR},
+            </if>
+            <if test="available != null" >
+                available = #{available,jdbcType=BIT},
+            </if>
+            <if test="sorted != null" >
+                sorted = #{sorted,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,javaType=String,jdbcType=CHAR}
+    </update>
+    <!-- 删除资源 -->
+    <delete id="delete" parameterType="string">
+        delete from sys_resource where id = #{id,javaType=string} OR parentId = #{id,javaType=string}
+    </delete>
+
+    <!--根据菜单ID删除角色菜单中间表数据-->
+    <delete id="deleteRoleResource" parameterType="java.lang.String">
+        DELETE FROM sys_role_resources WHERE resid = #{id,javaType=String}
+    </delete>
+
+    <!-- 获取资源 -->
+    <select id="select" parameterType="string" resultMap="BaseResultMap">
+      select * from sys_resource where id = #{id,javaType=string}
+    </select>
+
+    <!-- 查找资源 -->
+    <select id="findAll" resultMap="BaseResultMap">
+      select * from sys_resource order by sorted asc
+    </select>
+
+    <!--根据角色ID查询角色所拥有的权限-->
+    <select id="findRidByResource" resultType="java.lang.String" parameterType="java.lang.String">
+        SELECT resId FROM sys_role_resources rr
+        JOIN (
+            SELECT if(ISNULL(btn_id),t1.id,btn_id) id FROM
+            (
+              SELECT id,name,type,parentId,sorted FROM sys_resource WHERE (type = 'MENU' AND parentId &lt;&gt; 'ee552dd8387b4f71953abec3b1c231dd')
+              OR (type = 'BUTTON' AND parentId = 'ee552dd8387b4f71953abec3b1c231dd')
+              UNION ALL
+	          SELECT id,name,type,parentId,sorted FROM sys_resource WHERE parentId = 'ee552dd8387b4f71953abec3b1c231dd' AND url &lt;&gt; ''
+            ) t1
+            LEFT JOIN (
+              SELECT id btn_id,parentId btn_pId FROM sys_resource WHERE type = 'BUTTON'
+            ) btn ON btn.btn_pId = t1.id
+        ) t ON rr.resId = t.id
+        WHERE rr.roleId = #{rid,javaType=String}
+    </select>
+
+    <!--根据用户ID查询url非空的菜单-->
+    <select id="queryUrlNotNull" resultMap="BaseResultMap" parameterType="java.lang.String">
+        SELECT DISTINCT re.* FROM sys_user u
+        JOIN sys_user_roles ur ON u.id = ur.userId
+        JOIN sys_role r ON r.id = ur.roleId
+        JOIN sys_role_resources rr ON r.id = rr.roleId
+        JOIN sys_resource re ON re.id = rr.resId
+        WHERE u.id = #{id,javaType=String}
+        AND re.url IS NOT NULL AND re.url &lt;&gt; ''
+        ORDER BY re.sorted
+    </select>
+</mapper>

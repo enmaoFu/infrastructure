@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.infrastructure.dao.culture.GroupsVerMapper">
+
+    <resultMap id="ResultGroupsVerMap" type="com.infrastructure.entity.culture.GroupsVerification">
+        <id column="id" property="id" javaType="string" jdbcType="CHAR"/>
+        <result column="groupId" property="groupId"></result>
+        <result column="applyUser" property="applyUser"></result>
+        <result column="information" property="information"></result>
+        <result column="createTime" property="createTime"></result>
+        <result column="isPass" property="isPass"></result>
+        <result column="groupName" property="groupName"></result>
+        <result column="userName" property="userName"></result>
+    </resultMap>
+
+    <!--申请入群消息查询+分页-->
+    <select id="queryPage" resultMap="ResultGroupsVerMap" parameterType="GroupsVerification">
+        SELECT gv.id,u.username,g.`name` groupName,gv.information,gv.createTime,gv.isPass FROM groups g
+        JOIN groups_verification gv ON g.id = gv.groupId
+        JOIN sys_user u ON gv.applyUser = u.id
+        WHERE g.createUser = #{applyUser}
+    </select>
+
+    <!--查询待处理验证消息-->
+    <select id="queryPending" resultMap="ResultGroupsVerMap" parameterType="java.lang.String">
+        SELECT gv.id,u.username,g.`name` groupName,gv.information,gv.createTime,gv.isPass FROM groups g
+        JOIN groups_verification gv ON g.id = gv.groupId
+        JOIN sys_user u ON gv.applyUser = u.id
+        WHERE g.createUser = #{userId} AND isPass = 'P'
+    </select>
+
+    <insert id="insert" parameterType="GroupsVerification">
+        INSERT INTO groups_verification (id,groupId,applyUser,information,createTime,isPass)
+        VALUES (#{id,javaType=String},#{groupId},#{applyUser},#{information},#{createTime},#{isPass})
+    </insert>
+
+    <update id="update" parameterType="GroupsVerification">
+        UPDATE groups_verification
+        <set>
+          <if test="isPass != null">
+              isPass = #{isPass}
+          </if>
+        </set>
+        WHERE id = #{id,javaType=String}
+    </update>
+
+    <!--根据群组ID和用户ID查询申请记录-->
+    <select id="findByGidAndUid" resultMap="ResultGroupsVerMap" parameterType="GroupsVerification">
+        SELECT * FROM groups_verification WHERE groupId = #{groupId} AND applyUser = #{applyUser}
+        ORDER BY createTime desc
+    </select>
+
+    <!--根据ID查询验证信息-->
+    <select id="select" resultMap="ResultGroupsVerMap" parameterType="java.lang.String">
+        SELECT * FROM groups_verification WHERE id = #{id,javaType=String}
+    </select>
+
+    <!--批量删除验证信息-->
+    <delete id="deleteArray" parameterType="java.util.Arrays">
+        DELETE FROM groups_verification WHERE  id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id,javaType=String}
+        </foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.infrastructure.dao.system.SysFileMapper">
+
+    <resultMap id="ResultFileMap" type="com.infrastructure.entity.system.SysFile">
+        <id column="id" property="id" javaType="string" jdbcType="CHAR"/>
+        <result column="attachmentId" property="attachmentId"></result>
+        <result column="originalFileName" property="originalFileName"></result>
+        <result column="nowFileName" property="nowFileName"></result>
+        <result column="suff" property="suff"></result>
+    </resultMap>
+
+    <insert id="insert" parameterType="SysFile">
+        INSERT INTO file (id,attachmentId,originalFileName,nowFileName,suff)
+        VALUES (#{id,javaType=String},#{attachmentId},#{originalFileName},#{nowFileName},#{suff})
+    </insert>
+    
+    <select id="select" resultMap="ResultFileMap" parameterType="java.lang.String">
+        SELECT * FROM file WHERE attachmentId = #{_parameter,javaType=String}
+    </select>
+
+    <update id="update" parameterType="SysFile">
+        UPDATE file
+        <set>
+            <if test="originalFileName != null and originalFileName != ''">originalFileName = #{originalFileName},</if>
+            <if test="nowFileName != null and nowFileName != ''">nowFileName = #{nowFileName},</if>
+            <if test="suff != null and suff != ''">suff = #{suff},</if>
+        </set>
+        WHERE attachmentId = #{attachmentId}
+    </update>
+
+    <!--删除-->
+    <delete id="delete" parameterType="java.lang.String">
+        DELETE FROM file WHERE attachmentId = #{_parameter,javaType=String}
+    </delete>
+</mapper>

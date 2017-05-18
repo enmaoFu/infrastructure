@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.infrastructure.dao.system.CompanyMapper">
+    
+    <resultMap id="CompanyResultMap" type="com.infrastructure.entity.system.Company">
+        <id column="id" property="id" javaType="string" jdbcType="CHAR"/>
+        <result column="name" property="name"></result>
+        <result column="abbreviation" property="abbreviation"></result>
+        <result column="address" property="address"></result>
+        <result column="parent" property="parent"></result>
+        <result column="parents" property="parents"></result>
+        <result column="motto" property="motto"></result>
+        <result column="master" property="master"></result>
+        <result column="createDate" property="createDate"></result>
+        <collection property="roleList" ofType="Role" resultMap="RoleResultMap"></collection>
+        <collection property="userList" ofType="SysUser" resultMap="UserResultMap"></collection>
+        <collection property="deptList" ofType="Dept" resultMap="DeptResultMap"></collection>
+    </resultMap>
+
+    <resultMap id="RoleResultMap" type="com.infrastructure.entity.system.Role">
+        <id column="rid" property="id" javaType="string" jdbcType="CHAR"/>
+        <result column="rname" property="name"></result>
+    </resultMap>
+
+    <resultMap id="UserResultMap" type="com.infrastructure.entity.system.SysUser">
+        <id column="uid" property="id" javaType="string" jdbcType="CHAR"/>
+        <result column="login" property="login" jdbcType="VARCHAR"/>
+        <result column="username" property="username" jdbcType="VARCHAR"/>
+        <result column="password" property="password" jdbcType="CHAR"/>
+        <result column="sex" property="sex" jdbcType="VARCHAR"/>
+        <result column="age" property="age" javaType="Integer"/>
+        <result column="birthday" property="birthday" jdbcType="VARCHAR"/>
+        <result column="phone" property="phone" jdbcType="VARCHAR"/>
+        <result column="email" property="email" jdbcType="VARCHAR"/>
+        <result column="available" property="available" javaType="boolean" jdbcType="BIT"/>
+        <result column="companyId" property="companyId" jdbcType="VARCHAR"/>
+        <result column="companyName" property="companyName" jdbcType="VARCHAR"/>
+        <result column="parentId" property="parentId" jdbcType="VARCHAR"/>
+        <result column="parentName" property="parentName" jdbcType="VARCHAR"/>
+        <result column="creataDate" property="creataDate" jdbcType="VARCHAR"/>
+        <result column="updateDate" property="updateDate" jdbcType="VARCHAR"/>
+        <result column="roleId" property="roleId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="DeptResultMap" type="com.infrastructure.entity.system.Dept">
+        <id column="did" property="id" javaType="string" jdbcType="CHAR"/>
+        <result column="dname" property="name"></result>
+        <result column="code" property="code"></result>
+        <result column="parentId" property="parentId"></result>
+        <result column="parentIds" property="parentIds"></result>
+        <result column="companyId" property="companyId"></result>
+        <result column="remark" property="remark"></result>
+    </resultMap>
+
+
+    <!--查询企业及子企业-->
+    <select id="findSysCompanys" resultMap="CompanyResultMap" parameterType="com.infrastructure.entity.system.Company">
+        <if test="id != null and id != ''">
+            SELECT id,`name`,abbreviation,address,parent,parents,motto,`master`,createDate FROM (
+            select c.id,c.`name`,c.abbreviation,c.address,c.parent,c.parents,c.motto,c.`master`,c.createDate from sys_company c WHERE c.id = #{id,javaType=string}
+            UNION ALL
+            select c.id,c.`name`,c.abbreviation,c.address,c.parent,c.parents,c.motto,c.`master`,c.createDate from sys_company c WHERE c.parents like CONCAT('%',#{id,javaType=string},'%')
+            ) t  where 1=1 ${where}
+        </if>
+        <if test="id == null or id == ''">
+            select * from sys_company
+        </if>
+    </select>
+
+    <!--查询所有企业-->
+    <select id="findAll" resultMap="CompanyResultMap">
+        select * from sys_company
+    </select>
+
+    <!--根据ID查询企业信息-->
+    <select id="findById" resultMap="CompanyResultMap" parameterType="java.lang.String">
+        SELECT * FROM sys_company WHERE id = #{_parameter}
+    </select>
+    
+    <!--根据用户所属企业ID查询角色 SELECT id FROM sys_company WHERE id = #{companyId} OR parents LIKE CONCAT('%',#{companyId},'%') -->
+    <select id="findCidByRoles" resultMap="CompanyResultMap" parameterType="java.lang.String">
+        SELECT r.id rid,r.`name` rname,r.companyId,c.id,c.`name`,c.parent FROM sys_role r
+                JOIN sys_company c ON r.companyId = c.id
+                where companyId = #{companyId}
+    </select>
+    
+    <!--企业新增-->
+    <insert id="insert" parameterType="com.infrastructure.entity.system.Company">
+        INSERT INTO sys_company (id,`name`,abbreviation,address,parent,parents,motto,`master`,createDate)
+        VALUES (#{id,javaType=string},#{name},#{abbreviation},#{address},#{parent},#{parents},#{motto},#{master},#{createDate})
+    </insert>
+
+    <!--企业修改-->
+    <update id="update" parameterType="com.infrastructure.entity.system.Company">
+        UPDATE sys_company
+        <set>
+            <if test="name != null and name != ''">name=#{name},</if>
+            <if test="abbreviation != null and abbreviation != ''">abbreviation=#{abbreviation},</if>
+            <if test="address != null and address != ''">address=#{address},</if>
+            <if test="motto != null and motto != ''">motto=#{motto},</if>
+            <if test="master != null and master != ''">master=#{master},</if>
+            <if test="parent != null and parent != ''">parent=#{parent},</if>
+            <if test="parents != null and parents != ''">parents=#{parents},</if>
+        </set>
+        WHERE id = #{id,javaType=string}
+    </update>
+    
+    <!--企业删除-->
+    <delete id="delete" parameterType="java.lang.String">
+        DELETE FROM sys_company WHERE id = #{_parameter} or parents like CONCAT("%",#{_parameter},"%")
+    </delete>
+
+    <!--根据企业查询用户-->
+    <select id="getUserByCompanyMy" resultMap="CompanyResultMap">
+        SELECT c.*,u.id uid,u.username FROM sys_company c JOIN sys_user u ON c.id = u.companyId
+        WHERE u.companyId IN (SELECT cc.id FROM sys_company cc WHERE cc.id = #{map.companyId})
+    </select>
+    <!--根据企业查询用户-->
+    <select id="getUserByCompany" resultMap="CompanyResultMap">
+        SELECT c.*,u.id uid,u.username FROM sys_company c JOIN sys_user u ON c.id = u.companyId
+        WHERE u.companyId = #{map.companyId} AND u.id &lt;&gt; #{map.id}
+    </select>
+
+    <!--根据企业查询部门-->
+    <select id="getDeptByComany" resultMap="CompanyResultMap" parameterType="com.infrastructure.entity.system.SysUser">
+        SELECT c.*,d.id did, d.name dname FROM sys_dept d JOIN sys_company c ON d.companyId = c.id
+         WHERE d.companyId = #{companyId}
+    </select>
+
+    <select id="getCompanyByCurentCom" resultMap="CompanyResultMap" parameterType="java.lang.String">
+        SELECT * FROM sys_company sc WHERE sc.id = (SELECT LEFT(c.parents,32) FROM sys_company c
+         WHERE c.id = #{_parameter}) OR sc.parents LIKE CONCAT("%",(SELECT LEFT(c.parents,32) FROM sys_company c WHERE c.id = #{_parameter}),"%")
+    </select>
+
+    <select id="queryCompanyByIds" resultMap="CompanyResultMap" parameterType="java.util.List">
+        SELECT * FROM sys_company sc WHERE sc.id IN
+        <foreach collection="list" item="ids" open="(" close=")" separator=",">
+            #{ids}
+        </foreach>
+
+    </select>
+    <select id="getCompanyNamesByIds" parameterType="java.util.Arrays" resultMap="CompanyResultMap">
+        SELECT c.id,GROUP_CONCAT(c.name) name FROM sys_company c WHERE c.id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id,javaType=String}
+        </foreach>
+    </select>
+    <select id="select" parameterType="java.lang.String" resultType="com.infrastructure.entity.system.Company">
+        SELECT * FROM sys_company WHERE id=#{id,javaType=String}
+    </select>
+</mapper>

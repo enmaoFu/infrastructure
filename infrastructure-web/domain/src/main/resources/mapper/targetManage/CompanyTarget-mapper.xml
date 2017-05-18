@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- NAMESPACE必须和接口的类路径一样 -->
+<mapper namespace="com.infrastructure.dao.targetManage.CompanyTargetMapper">
+
+    <resultMap id="CompanyTargetResultMap" type="com.infrastructure.entity.targetManage.CompanyTarget">
+        <id column="id" property="id" javaType="string" jdbcType="VARCHAR"/>
+        <result property="targetTitle" column="target_title" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="targetYear" column="target_year" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="targetType" column="target_type" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="targetTimeSlot" column="target_time_slot" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="userId" column="user_id" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="companyId" column="company_id" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="targetContent" column="target_content" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="targetAmount" column="target_amount" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="remark" column="remark" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="createTime" column="createTime" javaType="Date" jdbcType="TIMESTAMP"></result>
+        <result property="userName" column="username" javaType="String" ></result>
+        <result property="coName" column="co_name" javaType="String" ></result>
+        <result property="coTarget1" column="co_target1" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="coTarget2" column="co_target2" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="coTarget3" column="co_target3" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="coTarget4" column="co_target4" javaType="String" jdbcType="VARCHAR"></result>
+    </resultMap>
+
+    <sql id="BaseColumn">
+        id, target_title, target_year, target_type, target_time_slot, user_id, company_id, target_content, target_amount, remark, createTime, co_target1, co_target2, co_target3, co_target4
+    </sql>
+    <!--新增目标管理-->
+    <insert id="insert" parameterType="com.infrastructure.entity.targetManage.CompanyTarget">
+        INSERT INTO company_target (
+        id,
+        target_title,
+        target_year,
+        target_type,
+        target_time_slot,
+        user_id,
+        company_id,
+        target_content,
+        target_amount,
+        remark,
+        createTime,
+        co_target1,
+        co_target2,
+        co_target3,
+        co_target4
+        )
+        VALUES  (
+        #{id, javaType=string},
+        #{targetTitle},
+        #{targetYear},
+        #{targetType},
+        #{targetTimeSlot},
+        #{userId},
+        #{companyId},
+        #{targetContent},
+        #{targetAmount},
+        #{remark},
+        SYSDATE(),
+        #{coTarget1},
+        #{coTarget2},
+        #{coTarget3},
+        #{coTarget4}
+        )
+    </insert>
+
+    <!--修改目标管理-->
+    <update id="update" parameterType="com.infrastructure.entity.targetManage.CompanyTarget">
+        update company_target
+        <set>
+            <if test="targetTitle != null">
+                target_title = #{targetTitle,jdbcType=VARCHAR},
+            </if>
+            <if test="targetYear != null">
+                target_year = #{targetYear,jdbcType=VARCHAR},
+            </if>
+            <if test="targetType != null">
+                target_type = #{targetType,jdbcType=VARCHAR},
+            </if>
+            <if test="targetTimeSlot != null">
+                target_time_slot = #{targetTimeSlot,jdbcType=VARCHAR},
+            </if>
+            <if test="userId != null">
+                user_id = #{userId,jdbcType=VARCHAR},
+            </if>
+            <if test="companyId != null">
+                company_id = #{companyId,jdbcType=VARCHAR},
+            </if>
+            <if test="targetContent != null">
+                target_content = #{targetContent,jdbcType=VARCHAR},
+            </if>
+            <if test="targetAmount != null">
+                target_amount = #{targetAmount,jdbcType=VARCHAR},
+            </if>
+            <if test="remark != null">
+                remark = #{remark,jdbcType=VARCHAR},
+            </if>
+            <if test="coTarget1 != null">
+                co_target1 = #{coTarget1,jdbcType=VARCHAR},
+            </if>
+            <if test="coTarget2 != null">
+                co_target2 = #{coTarget2,jdbcType=VARCHAR},
+            </if>
+            <if test="coTarget3 != null">
+                co_target3 = #{coTarget3,jdbcType=VARCHAR},
+            </if>
+            <if test="coTarget4 != null">
+                co_target4 = #{coTarget4,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id, javaType=string}
+    </update>
+
+    <!--删除目标管理-->
+    <delete id="delete">
+        DELETE FROM company_target WHERE id = #{id, javaType=string}
+    </delete>
+
+    <!--批量删除目标管理-->
+    <delete id="deleteBatch">
+        DELETE FROM company_target WHERE id IN
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 查找目标管理列表 -->
+    <select id="queryList" resultMap="CompanyTargetResultMap" resultType="com.infrastructure.entity.targetManage.CompanyTarget">
+        SELECT
+        c.id,
+        c.target_title,
+        c.target_year,
+        c.target_type,
+        c.target_time_slot,
+        c.user_id,
+        c.company_id,
+        c.target_content,
+        c.target_amount,
+        c.remark,
+        c.createTime,
+        c.co_target1,
+        c.co_target2,
+        c.co_target3,
+        c.co_target4,
+        u.username username,
+        p.name co_name
+        FROM company_target c
+        LEFT JOIN sys_user u ON c.user_id = u.id
+        LEFT JOIN sys_company p ON c.company_id = p.id
+        WHERE 1 = 1 ${where}
+    </select>
+
+    <!-- 获取目标管理 -->
+    <select id="getById" resultMap="CompanyTargetResultMap" parameterType="java.lang.String">
+        SELECT
+        c.id,
+        c.target_title,
+        c.target_year,
+        c.target_type,
+        c.target_time_slot,
+        c.user_id,
+        c.company_id,
+        c.target_content,
+        c.target_amount,
+        c.remark,
+        c.createTime,
+        c.co_target1,
+        c.co_target2,
+        c.co_target3,
+        c.co_target4,
+        u.username username,
+        p.name co_name
+        FROM company_target c
+        LEFT JOIN sys_user u ON c.user_id = u.id
+        LEFT JOIN sys_company p ON c.company_id = p.id
+        <where>
+            c.id = #{id, javaType=string}
+        </where>
+    </select>
+
+    <!-- 获取目标管理 -->
+    <select id="queryCompanyTargetByMap" resultMap="CompanyTargetResultMap" parameterType="java.util.Map">
+        SELECT
+        c.id,
+        c.target_title,
+        c.target_year,
+        c.target_type,
+        c.target_time_slot,
+        c.user_id,
+        c.company_id,
+        c.target_content,
+        c.target_amount,
+        c.remark,
+        c.createTime,
+        c.co_target1,
+        c.co_target2,
+        c.co_target3,
+        c.co_target4,
+        u.username username,
+        p.name co_name
+        FROM company_target c
+        LEFT JOIN sys_user u ON c.user_id = u.id
+        LEFT JOIN sys_company p ON c.company_id = p.id
+        <where>
+            1=1
+            <if test="targetYear != null">
+                AND c.target_year = #{targetYear}
+            </if>
+            <if test="targetType != null">
+                AND c.target_type = #{targetType}
+            </if>
+            <if test="targetTimeSlot != null">
+                AND c.target_time_slot = #{targetTimeSlot}
+            </if>
+            <if test="companyId != null">
+                AND c.company_id = #{companyId}
+            </if>
+            <if test="companyTargetId != null">
+                AND c.id != #{companyTargetId}
+            </if>
+        </where>
+    </select>
+</mapper>

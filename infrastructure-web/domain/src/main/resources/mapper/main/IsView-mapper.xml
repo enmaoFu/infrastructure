@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.infrastructure.dao.main.IsViewMapper">
+
+    <resultMap id="ResultViewMap" type="com.infrastructure.entity.main.IsView">
+        <id column="id" property="id" javaType="string" jdbcType="CHAR"/>
+        <result column="viewId" property="viewId"></result>
+        <result column="userId" property="userId"></result>
+        <result column="createTime" property="createTime"></result>
+        <result column="isView" property="isView"></result>
+    </resultMap>
+
+    <select id="findByView" resultMap="ResultViewMap" parameterType="IsView">
+        SELECT * FROM is_view WHERE viewId = #{viewId} AND userId = #{userId}
+    </select>
+
+    <insert id="insert" parameterType="IsView">
+        INSERT INTO is_view (id,viewId,userId,createTime,isView)
+        VALUES (#{id,javaType=String},#{viewId},#{userId},#{createTime},#{isView})
+    </insert>
+</mapper>

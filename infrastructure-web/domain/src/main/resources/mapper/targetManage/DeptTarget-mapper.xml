@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- NAMESPACE必须和接口的类路径一样 -->
+<mapper namespace="com.infrastructure.dao.targetManage.DeptTargetMapper">
+
+    <resultMap id="DeptTargetResultMap" type="com.infrastructure.entity.targetManage.DeptTarget">
+        <id column="id" property="id" javaType="string" jdbcType="VARCHAR"/>
+        <result property="companyTargetId" column="company_target_id" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="deptTargetTitle" column="dept_target_title" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="deptTargetYear" column="dept_target_year" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="deptTargetType" column="dept_target_type" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="deptTargetTimeSlot" column="dept_target_time_slot" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="userId" column="user_id" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="deptId" column="dept_id" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="companyId" column="company_id" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="deptTargetContent" column="dept_target_content" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="deptTargetAmount" column="dept_target_amount" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="remark" column="remark" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="createTime" column="createTime" javaType="Date" jdbcType="TIMESTAMP"></result>
+        <result property="userName" column="username" javaType="String" ></result>
+        <result property="deptName" column="deptName" javaType="String" ></result>
+        <result property="coName" column="co_name" javaType="String" ></result>
+        <result property="deptTarget1" column="dept_target1" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="deptTarget2" column="dept_target2" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="deptTarget3" column="dept_target3" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="deptTarget4" column="dept_target4" javaType="String" jdbcType="VARCHAR"></result>
+    </resultMap>
+
+    <sql id="BaseColumn">
+        id, company_target_id, dept_target_title, dept_target_year, dept_target_time_slot, user_id, deptId, company_id, dept_target_content, dept_target_amount, remark, createTime, dept_target1, dept_target2, dept_target3, dept_target4
+    </sql>
+    <!--新增目标管理-->
+    <insert id="insert" parameterType="com.infrastructure.entity.targetManage.DeptTarget">
+        INSERT INTO dept_target (
+        id,
+        company_target_id,
+        dept_target_title,
+        dept_target_year,
+        dept_target_time_slot,
+        dept_target_type,
+        user_id,
+        dept_id,
+        company_id,
+        dept_target_content,
+        dept_target_amount,
+        remark,
+        createTime,
+        dept_target1,
+        dept_target2,
+        dept_target3,
+        dept_target4
+        )
+        VALUES  (
+        #{id, javaType=string},
+        #{companyTargetId},
+        #{deptTargetTitle},
+        #{deptTargetYear},
+        #{deptTargetTimeSlot},
+        #{deptTargetType},
+        #{userId},
+        #{deptId},
+        #{companyId},
+        #{deptTargetContent},
+        #{deptTargetAmount},
+        #{remark},
+        SYSDATE(),
+        #{deptTarget1},
+        #{deptTarget2},
+        #{deptTarget3},
+        #{deptTarget4}
+        )
+    </insert>
+
+    <!--修改目标管理-->
+    <update id="update" parameterType="com.infrastructure.entity.targetManage.DeptTarget">
+        update dept_target
+        <set>
+            <if test="companyTargetId != null">
+                company_target_id = #{companyTargetId,jdbcType=VARCHAR},
+            </if>
+            <if test="deptTargetTitle != null">
+                dept_target_title = #{deptTargetTitle,jdbcType=VARCHAR},
+            </if>
+            <if test="deptTargetYear != null">
+                dept_target_year = #{deptTargetYear,jdbcType=VARCHAR},
+            </if>
+            <if test="deptTargetTimeSlot != null">
+                dept_target_time_slot = #{deptTargetTimeSlot,jdbcType=VARCHAR},
+            </if>
+            <if test="deptTargetType != null">
+                dept_target_type = #{deptTargetType,jdbcType=VARCHAR},
+            </if>
+            <if test="userId != null">
+                user_id = #{userId,jdbcType=VARCHAR},
+            </if>
+            <if test="deptId != null">
+                dept_id = #{deptId,jdbcType=VARCHAR},
+            </if>
+            <if test="companyId != null">
+                company_id = #{companyId,jdbcType=VARCHAR},
+            </if>
+            <if test="deptTargetContent != null">
+                dept_target_content = #{deptTargetContent,jdbcType=VARCHAR},
+            </if>
+            <if test="deptTargetAmount != null">
+                dept_target_amount = #{deptTargetAmount,jdbcType=VARCHAR},
+            </if>
+            <if test="remark != null">
+                remark = #{remark,jdbcType=VARCHAR},
+            </if>
+            <if test="deptTarget1 != null">
+                dept_target1 = #{deptTarget1,jdbcType=VARCHAR},
+            </if>
+            <if test="deptTarget2 != null">
+                dept_target2 = #{deptTarget2,jdbcType=VARCHAR},
+            </if>
+            <if test="deptTarget3 != null">
+                dept_target3 = #{deptTarget3,jdbcType=VARCHAR},
+            </if>
+            <if test="deptTarget4 != null">
+                dept_target4 = #{deptTarget4,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id, javaType=string}
+    </update>
+
+    <!--删除目标管理-->
+    <delete id="delete">
+        DELETE FROM dept_target WHERE id = #{id, javaType=string}
+    </delete>
+
+    <!--批量删除目标管理-->
+    <delete id="deleteBatch">
+        DELETE FROM dept_target WHERE id IN
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!--根据公司目标编号批量删除目标管理-->
+    <delete id="deleteBathByCompanyTargetId">
+        DELETE FROM dept_target WHERE company_target_id IN
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 查找目标管理列表 -->
+    <select id="queryList" resultMap="DeptTargetResultMap" resultType="com.infrastructure.entity.targetManage.DeptTarget">
+        SELECT
+        c.id,
+        c.company_target_id,
+        c.dept_target_title,
+        c.dept_target_year,
+        c.dept_target_time_slot,
+        c.dept_target_type,
+        c.user_id,
+        c.dept_id,
+        c.company_id,
+        c.dept_target_content,
+        c.dept_target_amount,
+        c.remark,
+        c.createTime,
+        c.dept_target1,
+        c.dept_target2,
+        c.dept_target3,
+        c.dept_target4,
+        u.username username,
+        d.name deptName,
+        p.name co_name
+        FROM dept_target c
+        LEFT JOIN sys_user u ON c.user_id = u.id
+        LEFT JOIN sys_dept d ON c.dept_id = d.id
+        LEFT JOIN sys_company p ON c.company_id = p.id
+        WHERE 1 = 1 ${where}
+    </select>
+
+    <!-- 获取目标管理 -->
+    <select id="getById" resultMap="DeptTargetResultMap" parameterType="java.lang.String">
+        SELECT
+        c.id,
+        c.company_target_id,
+        c.dept_target_title,
+        c.dept_target_year,
+        c.dept_target_time_slot,
+        c.dept_target_type,
+        c.user_id,
+        c.dept_id,
+        c.company_id,
+        c.dept_target_content,
+        c.dept_target_amount,
+        c.remark,
+        c.createTime,
+        c.dept_target1,
+        c.dept_target2,
+        c.dept_target3,
+        c.dept_target4,
+        u.username username,
+        d.name deptName,
+        p.name co_name
+        FROM dept_target c
+        LEFT JOIN sys_user u ON c.user_id = u.id
+        LEFT JOIN sys_dept d ON c.dept_id = d.id
+        LEFT JOIN sys_company p ON c.company_id = p.id
+        <where>
+            c.id = #{id, javaType=string}
+        </where>
+    </select>
+
+    <!-- 根据条件查询 -->
+    <select id="queryDeptTargetByMap" resultMap="DeptTargetResultMap" parameterType="java.util.Map">
+        SELECT
+        c.id,
+        c.company_target_id,
+        c.dept_target_title,
+        c.dept_target_year,
+        c.dept_target_time_slot,
+        c.dept_target_type,
+        c.user_id,
+        c.dept_id,
+        c.company_id,
+        c.dept_target_content,
+        c.dept_target_amount,
+        c.remark,
+        c.createTime,
+        c.dept_target1,
+        c.dept_target2,
+        c.dept_target3,
+        c.dept_target4,
+        u.username username,
+        d.name deptName,
+        p.name co_name
+        FROM dept_target c
+        LEFT JOIN sys_user u ON c.user_id = u.id
+        LEFT JOIN sys_dept d ON c.dept_id = d.id
+        LEFT JOIN sys_company p ON c.company_id = p.id
+        <where>
+            1=1
+            <if test="ids != null">
+            AND c.company_target_id IN
+                <foreach collection="ids" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="deptTargetYear != null">
+                AND c.dept_target_year = #{deptTargetYear}
+            </if>
+            <if test="deptTargetType != null">
+                AND c.dept_target_type = #{deptTargetType}
+            </if>
+            <if test="deptTargetTimeSlot != null">
+                AND c.dept_target_time_slot = #{deptTargetTimeSlot}
+            </if>
+            <if test="deptId != null">
+                AND c.dept_id = #{deptId}
+            </if>
+            <if test="companyId != null">
+                AND c.company_id = #{companyId}
+            </if>
+            <if test="deptTargetId != null">
+                AND c.id != #{deptTargetId}
+            </if>
+        </where>
+    </select>
+</mapper>

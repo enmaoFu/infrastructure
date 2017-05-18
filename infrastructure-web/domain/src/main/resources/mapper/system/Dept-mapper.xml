@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- NAMESPACE必须和接口的类路径一样 -->
+<mapper namespace="com.infrastructure.dao.system.DeptMapper">
+
+    <resultMap id="DeptResultMap" type="com.infrastructure.entity.system.Dept">
+        <id column="id" property="id" javaType="String" jdbcType="CHAR"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="code" property="code" jdbcType="VARCHAR"/>
+        <result column="parentId" property="parentId" jdbcType="VARCHAR"/>
+        <result column="parentIds" property="parentIds" jdbcType="CHAR"/>
+        <result column="companyId" property="companyId" jdbcType="CHAR"/>
+        <result column="remark" property="remark" jdbcType="CHAR"/>
+        <result column="companyName" property="companyName" jdbcType="CHAR"/>
+        <collection property="userSet" ofType="SysUser" resultMap="UserResultMap"></collection>
+    </resultMap>
+
+    <resultMap id="UserResultMap" type="com.infrastructure.entity.system.SysUser">
+        <id column="uid" property="id" javaType="string" jdbcType="CHAR"/>
+        <result column="login" property="login" jdbcType="VARCHAR"/>
+        <result column="username" property="username" jdbcType="VARCHAR"/>
+        <result column="password" property="password" jdbcType="CHAR"/>
+        <result column="sex" property="sex" jdbcType="VARCHAR"/>
+        <result column="age" property="age" javaType="Integer"/>
+        <result column="birthday" property="birthday" jdbcType="VARCHAR"/>
+        <result column="phone" property="phone" jdbcType="VARCHAR"/>
+        <result column="email" property="email" jdbcType="VARCHAR"/>
+        <result column="available" property="available" javaType="boolean" jdbcType="BIT"/>
+        <result column="companyId" property="companyId" jdbcType="VARCHAR"/>
+        <result column="companyName" property="companyName" jdbcType="VARCHAR"/>
+        <result column="parentId" property="parentId" jdbcType="VARCHAR"/>
+        <result column="parentName" property="parentName" jdbcType="VARCHAR"/>
+        <result column="creataDate" property="creataDate" jdbcType="VARCHAR"/>
+        <result column="updateDate" property="updateDate" jdbcType="VARCHAR"/>
+        <result column="roleId" property="roleId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!--查询部门-->
+    <select id="findAll" resultMap="DeptResultMap" parameterType="Dept">
+        SELECT d.id,d.name,d.code,d.parentId,d.parentIds,d.companyId,d.remark,c.name companyName FROM sys_dept d LEFT JOIN sys_company c ON d.companyId = c.id
+        <if test="companyId != null and companyId != ''">
+            WHERE d.companyId = #{companyId}
+        </if>
+    </select>
+
+    <!--根据企业ID查询部门-->
+    <select id="findByCompanyId" resultMap="DeptResultMap" parameterType="java.lang.String">
+        SELECT * FROM sys_dept WHERE companyId = #{companyId}
+    </select>
+
+    <!--根据主键查询部门-->
+    <select id="select" resultMap="DeptResultMap" parameterType="java.lang.String">
+        SELECT * FROM sys_dept WHERE id = #{id,javaType=String}
+    </select>
+
+    <!--根据公司ID查询部门及用户-->
+    <select id="findUserByCid" resultMap="DeptResultMap" parameterType="java.lang.String">
+        SELECT d.*,u.id uid,u.username
+        FROM sys_dept d
+        JOIN sys_role r ON d.id = r.deptId
+        JOIN sys_user_roles ur ON ur.roleId = r.id
+        JOIN sys_user u ON  ur.userId = u.id
+        WHERE u.companyId = #{companyId}
+        order by d.id
+    </select>
+
+    <!--部门新增-->
+    <insert id="insert" parameterType="Dept">
+        INSERT INTO sys_dept (id,name,code,parentId,parentIds,companyId,remark)
+        VALUES (#{id,javaType=String},#{name},#{code},#{parentId},#{parentIds},#{companyId},#{remark})
+    </insert>
+
+    <!--修改-->
+    <update id="update" parameterType="Dept">
+        UPDATE sys_dept
+        <set>
+            <if test="name != null">
+                name = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="code != null">
+                code = #{code,jdbcType=VARCHAR},
+            </if>
+            <if test="remark != null">
+                remark = #{remark,jdbcType=VARCHAR},
+            </if>
+            <if test="parentId != null">
+                parentId = #{parentId,jdbcType=CHAR},
+            </if>
+            <if test="parentIds != null">
+                parentIds = #{parentIds,jdbcType=CHAR},
+            </if>
+            <if test="companyId != null">
+                companyId = #{companyId,jdbcType=CHAR},
+            </if>
+        </set>
+        where id = #{id, javaType=string}
+    </update>
+
+    <!--删除-->
+    <delete id="deleteArray" parameterType="java.lang.String">
+        DELETE FROM sys_dept WHERE id IN
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id,javaType=string}
+        </foreach>
+    </delete>
+
+    <!-- 根据用户ID查询用户设备Id -->
+    <select id="queryDeptByIds" parameterType="java.util.List" resultMap="DeptResultMap">
+        SELECT * FROM sys_dept WHERE id IN
+        <foreach collection="list" item="ids" open="(" close=")" separator=",">
+            #{ids}
+        </foreach>
+    </select>
+
+    <select id="getDeptNamesByIds" parameterType="java.util.Arrays" resultMap="DeptResultMap">
+        SELECT d.id,GROUP_CONCAT(d.name) name,d.companyId FROM sys_dept d WHERE d.id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id,javaType=String}
+        </foreach>
+    </select>
+</mapper>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- NAMESPACE必须和接口的类路径一样 -->
+<mapper namespace="com.infrastructure.dao.system.CustomerFeedbackMapper">
+
+    <resultMap id="CustomerFeedbackResultMap" type="com.infrastructure.entity.system.CustomerFeedback">
+        <id column="id" property="id" javaType="string" jdbcType="VARCHAR"/>
+        <result property="content" column="content" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="userId" column="user_id" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="companyId" column="company_id" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="createTime" column="createTime" javaType="Date" jdbcType="DATE"></result>
+        <result property="userName" column="username" javaType="String" ></result>
+        <result property="coName" column="co_name" javaType="String" ></result>
+    </resultMap>
+    
+    <!--新增客户反馈-->
+    <insert id="insert" parameterType="com.infrastructure.entity.system.CustomerFeedback">
+        INSERT INTO customer_feedback (
+        id,
+        content,
+        user_id,
+        company_id,
+        createTime
+        )
+        VALUES  (
+        #{id, javaType=string},
+        #{content},
+        #{userId},
+        #{companyId},
+        SYSDATE()
+        )
+    </insert>
+
+    <!-- 查找客户反馈 -->
+    <select id="queryList" resultMap="CustomerFeedbackResultMap" resultType="com.infrastructure.entity.system.CustomerFeedback">
+        SELECT
+        c.id,
+        c.content,
+        c.user_id,
+        c.company_id,
+        c.createTime,
+        u.username username,
+        p.name co_name
+        FROM customer_feedback c
+        INNER JOIN sys_user u ON c.user_id = u.id
+        INNER JOIN sys_company p ON c.company_id = p.id
+        WHERE 1 = 1 ${where}
+    </select>
+
+    <!-- 获取客户反馈 -->
+    <select id="getById" resultMap="CustomerFeedbackResultMap" parameterType="java.lang.String">
+        SELECT
+        c.id,
+        c.content,
+        c.user_id,
+        c.company_id,
+        c.createTime,
+        u.username username,
+        p.name co_name
+        FROM customer_feedback c
+        INNER JOIN sys_user u ON c.user_id = u.id
+        INNER JOIN sys_company p ON c.company_id = p.id
+        <where>
+            c.id = #{id, javaType=string}
+        </where>
+    </select>
+</mapper>

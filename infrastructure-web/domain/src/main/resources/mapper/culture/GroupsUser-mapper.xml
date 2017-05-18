@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.infrastructure.dao.culture.GroupsUserMapper">
+
+    <resultMap id="ResultGroupUserMap" type="com.infrastructure.entity.culture.GroupsUser">
+        <id column="id" property="id" javaType="string" jdbcType="CHAR"/>
+        <result column="groupId" property="groupId"></result>
+        <result column="userId" property="userId"></result>
+        <result column="isDelete" property="isDelete"></result>
+        <result column="userName" property="userName"></result>
+    </resultMap>
+
+    <!--根据群组ID和用户ID查询群组用户数据-->
+    <select id="findGroupIdAndUserId" resultMap="ResultGroupUserMap">
+        SELECT * FROM groups_user WHERE groupId = #{groupId} AND userId = #{userId}
+    </select>
+
+    <!--根据群组ID查询群组用户ID-->
+    <select id="selectList" resultType="java.lang.String" parameterType="java.lang.String">
+        SELECT id FROM groups_user WHERE groupId = #{groupId}
+    </select>
+
+    <!--根据群组ID查询群组成员-->
+    <select id="findGroupUser" resultMap="ResultGroupUserMap" parameterType="java.lang.String">
+        SELECT gu.id,gu.userId,u.username FROM groups_user gu
+        JOIN sys_user u ON gu.userId = u.id
+        WHERE gu.groupId = #{groupId} AND isDelete = 'N'
+    </select>
+
+    <!--根据群组ID查询群组成员ID-->
+    <select id="selectUserId" resultType="java.lang.String" parameterType="java.lang.String">
+        SELECT userId FROM groups_user WHERE groupId = #{groupId} AND isDelete = 'N'
+    </select>
+
+    <!--根据群组ID和用户ID查询群组用户ID-->
+    <select id="queryGroupUserId" resultType="java.lang.String">
+        SELECT id FROM groups_user WHERE groupId = #{groupId} and userId IN
+        <foreach collection="userIds" item="uId" open="(" separator="," close=")">
+            #{uId,javaType=String}
+        </foreach>
+    </select>
+
+    <!--单条新增群组成员-->
+    <insert id="insert" parameterType="GroupsUser">
+        INSERT INTO groups_user (id,groupId,userId,isDelete) VALUES (#{id,javaType=String},#{groupId},#{userId},#{isDelete})
+    </insert>
+    
+    <!--批量新增群组成员-->
+    <insert id="insertArray" parameterType="java.util.List">
+        INSERT INTO groups_user (id,groupId,userId,isDelete)
+        <foreach collection="list" item="groupsUser" separator="union all">
+            SELECT #{groupsUser.id,javaType=String},#{groupsUser.groupId},#{groupsUser.userId},#{groupsUser.isDelete} FROM dual
+        </foreach>
+    </insert>
+
+    <!--修改-->
+    <update id="update" parameterType="GroupsUser">
+        UPDATE groups_user SET isDelete = 'N' WHERE id = #{id,javaType = String}
+    </update>
+
+    <!--物理删除群组所有成员-->
+    <delete id="deleteByGroupId" parameterType="java.lang.String">
+        DELETE FROM groups_user WHERE groupId = #{groupId}
+    </delete>
+
+    <!--逻辑删除群组成员-->
+    <delete id="delete">
+        UPDATE groups_user SET isDelete = 'Y' WHERE groupId = #{groupId} and userId = #{uId}
+    </delete>
+
+    <!--逻辑批量删除群组成员-->
+    <delete id="deleteArray" parameterType="java.util.List">
+        UPDATE groups_user SET isDelete = 'Y' WHERE id IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id,javaType=String}
+        </foreach>
+    </delete>
+</mapper>

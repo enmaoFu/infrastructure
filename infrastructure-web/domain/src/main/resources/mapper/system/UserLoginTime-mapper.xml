@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- NAMESPACE必须和接口的类路径一样 -->
+<mapper namespace="com.infrastructure.dao.system.UserLoginTimeMapper">
+
+    <resultMap id="UserLoginTimeResultMap" type="com.infrastructure.entity.system.UserLoginTime">
+        <id column="id" property="id" javaType="string" jdbcType="VARCHAR"/>
+        <result property="userId" column="userId" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="model" column="model" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="lcTime" column="lcTime" javaType="String" jdbcType="VARCHAR"></result>
+    </resultMap>
+
+    <resultMap id="ChartResultMap" type="com.infrastructure.entity.userLoginTime.UserLoginTimeChart">
+        <id column="id" property="id" javaType="string" jdbcType="VARCHAR"/>
+        <result property="lcTime" column="lcTime"></result>
+        <result property="yAxis" column="yAxis" ></result>
+        <result property="value" column="value"></result>
+    </resultMap>
+
+    <!--新增成本-->
+    <insert id="insert" parameterType="com.infrastructure.entity.system.UserLoginTime">
+        INSERT INTO user_login_time (id,userId,model,lcTime)
+        VALUES  (#{id, javaType=string},#{userId},#{model},#{lcTime})
+    </insert>
+
+    <!--根据时间查询用户登录情况-->
+    <select id="queryLoginUsers" resultMap="ChartResultMap" parameterType="java.lang.String">
+         SELECT lcTime,count(lcTime) yAxis,count(lcTime) value FROM (
+            SELECT SUBSTR(lcTime,1,16) lcTime FROM user_login_time
+            WHERE (model IS NULL OR model = '') AND SUBSTR(lcTime,1,10) = #{time}
+         ) t GROUP BY lcTime
+    </select>
+</mapper>

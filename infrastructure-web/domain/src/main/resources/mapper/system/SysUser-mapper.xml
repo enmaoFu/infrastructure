@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.infrastructure.dao.system.SysUserMapper">
+
+    <resultMap id="SysUserResultMap" type="com.infrastructure.entity.system.SysUser">
+        <id column="id" property="id" javaType="string" jdbcType="CHAR"/>
+        <result column="prefix" property="prefix" jdbcType="VARCHAR"/>
+        <result column="login" property="login" jdbcType="VARCHAR"/>
+        <result column="username" property="username" jdbcType="VARCHAR"/>
+        <result column="password" property="password" jdbcType="CHAR"/>
+        <result column="sex" property="sex" jdbcType="VARCHAR"/>
+        <result column="age" property="age" javaType="Integer"/>
+        <result column="birthday" property="birthday" jdbcType="VARCHAR"/>
+        <result column="phone" property="phone" jdbcType="VARCHAR"/>
+        <result column="email" property="email" jdbcType="VARCHAR"/>
+        <result column="available" property="available" javaType="boolean" jdbcType="BIT"/>
+        <result column="companyId" property="companyId" jdbcType="VARCHAR"/>
+        <result column="deptId" property="deptId" jdbcType="VARCHAR"/>
+        <result column="companyName" property="companyName" jdbcType="VARCHAR"/>
+        <result column="parentId" property="parentId" jdbcType="VARCHAR"/>
+        <result column="parentName" property="parentName" jdbcType="VARCHAR"/>
+        <result column="creataDate" property="creataDate" jdbcType="VARCHAR"/>
+        <result column="updateDate" property="updateDate" jdbcType="VARCHAR"/>
+        <result column="roleId" property="roleId" jdbcType="VARCHAR"/>
+        <result column="deptName" property="deptName" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+      id, prefix, login, username, password, sex, age, birthday, phone, email, available,companyId,parentId,roleId
+    </sql>
+
+    <!-- 根据条件查找用户+分页 -->
+    <select id="findSysUsers" resultMap="SysUserResultMap" parameterType="com.infrastructure.entity.system.SysUser">
+        SELECT id,prefix,login,`password`,username,sex,age,birthday,phone,email,available,parentId,parentName,companyId,companyName,deptName,creataDate,updateDate FROM (
+        SELECT t.*,t1.username parentName,com.`name` companyName,d.name deptName FROM (
+        select id,prefix,login,`password`,username,sex,age,birthday,phone,email,available,parentId,companyId,deptId,creataDate,updateDate from sys_user
+        <if test="companyId != null and companyId != ''">
+            where companyId = #{companyId}
+        </if>
+        ) t
+        JOIN sys_company com ON t.companyId = com.id
+        JOIN sys_dept d ON d.id = t.deptId
+        LEFT JOIN sys_user t1 ON t.parentId = t1.id
+        ) t2 WHERE 1 = 1 ${where}
+    </select>
+
+    <!--根据ID查询用户-->
+    <select id="select" resultMap="SysUserResultMap" parameterType="java.lang.String">
+        select u.id, u.prefix, u.login, u.username, u.password, u.sex, u.age, u.birthday, u.phone, u.email, u.available,u.companyId,u.parentId,u.deptId from sys_user u
+         where u.id = #{id,jdbcType=CHAR}
+    </select>
+
+    <!--根据角色ID查询用户-->
+    <select id="findByRid" resultMap="SysUserResultMap" parameterType="java.lang.String">
+        SELECT u.* FROM sys_user u JOIN sys_user_roles ur ON u.id = ur.userId WHERE ur.roleId = #{rid}
+    </select>
+
+    <!--根据企业ID查询用户-->
+    <select id="findByCid" resultMap="SysUserResultMap" parameterType="java.lang.String">
+        SELECT u.id,u.username FROM sys_user u WHERE u.companyId = #{companyId}
+    </select>
+
+    <!--根据部门ID查询用户-->
+    <select id="findByDeptId" resultMap="SysUserResultMap" parameterType="java.lang.String">
+        SELECT u.* FROM sys_user u WHERE u.deptId = #{deptId} AND u.available=1
+    </select>
+
+    <!--根据ID删除用户-->
+    <delete id="delete" parameterType="java.lang.String">
+        delete from sys_user where id = #{id,jdbcType=CHAR}
+    </delete>
+
+    <!--批量删除用户-->
+    <delete id="deleteArray" parameterType="String">
+        DELETE FROM sys_user WHERE id IN
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!--用户新增-->
+    <insert id="insert" parameterType="com.infrastructure.entity.system.SysUser">
+        INSERT INTO sys_user ( id, prefix, login, password, username, sex, age, birthday, phone, email, available, companyId, parentId,  creataDate, deptId )
+        VALUES  (#{id,javaType=string},#{prefix},#{login},#{password},#{username},#{sex},#{age},#{birthday},#{phone},#{email},#{available},#{companyId},#{parentId},#{creataDate},#{deptId})
+    </insert>
+
+    <!--用户修改-->
+    <update id="update" parameterType="com.infrastructure.entity.system.SysUser">
+        update sys_user
+        <set>
+            <if test="prefix != null and prefix != ''">
+                prefix = #{prefix,jdbcType=VARCHAR},
+            </if>
+            <if test="login != null and login != ''">
+                login = #{login,jdbcType=VARCHAR},
+            </if>
+            <if test="username != null and username != ''">
+                username = #{username,jdbcType=VARCHAR},
+            </if>
+            <if test="password != null and password != ''">
+                password = #{password,jdbcType=CHAR},
+            </if>
+            <if test="sex != null and sex != ''">
+                sex = #{sex,jdbcType=CHAR},
+            </if>
+            <if test="age != null and age != ''">
+                age = #{age,jdbcType=INTEGER},
+            </if>
+            <if test="birthday != null and birthday != ''">
+                birthday = #{birthday,jdbcType=VARCHAR},
+            </if>
+            <if test="phone != null and phone != ''">
+                phone = #{phone,jdbcType=VARCHAR},
+            </if>
+            <if test="email != null and email != ''">
+                email = #{email,jdbcType=VARCHAR},
+            </if>
+            <if test="available != null">
+                available = #{available,jdbcType=BIT},
+            </if>
+            <if test="companyId != null">
+                companyId = #{companyId,jdbcType=CHAR},
+            </if>
+            <if test="parentId != null">
+                parentId = #{parentId,jdbcType=CHAR},
+            </if>
+            <if test="updateDate != null">
+                updateDate = #{updateDate,jdbcType=VARCHAR},
+            </if>
+            <if test="deptId != null">
+                deptId = #{deptId,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id, javaType=string,jdbcType=CHAR}
+    </update>
+
+    <!-- 根据登录名查找用户 -->
+    <select id="findSysUserByLogin" resultMap="SysUserResultMap">
+        select * from sys_user where login = #{login}
+    </select>
+
+    <!-- 查找所有用户 -->
+    <select id="findAll" resultMap="SysUserResultMap">
+        SELECT u.id,u.login,u.`password`,u.username,u.sex,u.age,u.birthday,u.phone,u.email,u.available,u.parentId,u.companyId,u.creataDate,u.updateDate,up.username parentName
+        FROM sys_user u LEFT JOIN sys_user up ON u.parentId = up.id WHERE 1 = 1 ${where}
+    </select>
+
+    <!-- 插入角色关联 -->
+    <insert id="contactWithRoles" parameterType="com.infrastructure.entity.system.SysUserRole">
+        insert into sys_user_roles(id, userId, roleId) values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.id, javaType=string},#{item.userId},#{item.roleId})
+        </foreach>
+    </insert>
+
+    <!-- 清空角色关联 -->
+    <delete id="unContactWithRoles" parameterType="string">
+        delete from sys_user_roles where userId = #{userId}
+    </delete>
+
+    <!-- 获取拥有的角色 -->
+    <select id="getOwnedRoleIds" parameterType="string" resultType="string">
+        select roleId from sys_user_roles where userId = #{userId}
+    </select>
+
+    <!--根据电话号码查询用户信息-->
+    <select id="queryUserByPhone" parameterType="com.infrastructure.entity.system.SysUser" resultMap="SysUserResultMap">
+        SELECT * FROM sys_user WHERE phone = #{phone}
+    </select>
+
+    <!-- 根据用户ID查询用户设备Id -->
+    <select id="queryInstallationIdByUserIds" parameterType="java.util.List" resultMap="SysUserResultMap">
+        SELECT * FROM sys_user WHERE id IN
+        <foreach collection="list" item="ids" open="(" close=")" separator=",">
+            #{ids}
+        </foreach>
+    </select>
+
+    <!-- 根据用户ID查询用户 -->
+    <select id="findSysUserById" parameterType="com.infrastructure.entity.system.SysUser" resultMap="SysUserResultMap">
+       SELECT a.id,(SELECT GROUP_CONCAT(r.description SEPARATOR '、')  FROM sys_role r
+        INNER JOIN sys_user_roles b ON r.id = b.roleId
+        WHERE b.userId =a.id GROUP BY b.userId ) AS duty,a.username,a.login,PASSWORD,
+        TYPE,a.phone,a.email,a.schId,a.installationId,a.deviceType,a.addr,a.avatar
+        FROM sys_user a
+        where a.id = #{id,javaType=String}
+    </select>
+
+    <!-- 根据学校标识查找系统用户 -->
+    <select id="findAllSysUsersBySchId" parameterType="string" resultMap="SysUserResultMap">
+        select * from sys_user
+        <where>
+            <if test="schId != null">
+                schId = #{schId}
+            </if>
+        </where>
+    </select>
+
+    <!-- 用户信息查询 -->
+    <select id="searchUser" parameterType="com.infrastructure.entity.system.SysUser" resultMap="SysUserResultMap">
+        SELECT * FROM sys_user WHERE parentId = #{id,javaType=string} OR id = #{id,javaType=string}
+    </select>
+
+    <!-- 用户信息查询 -->
+    <select id="searchUserByUserId" parameterType="string" resultMap="SysUserResultMap">
+        SELECT * FROM sys_user WHERE parentId = #{id,javaType=string}
+    </select>
+
+    <!-- 根据ID查找用户 -->
+    <select id="queryUserById" parameterType="com.infrastructure.entity.system.SysUser" resultMap="SysUserResultMap">
+        SELECT * FROM sys_user where id = #{id,javaType=string}
+    </select>
+
+    <!-- 判断登陆名是否存在 -->
+    <select id="isExists" parameterType="string" resultType="boolean">
+        select count(1) from sys_user where login = #{login}
+    </select>
+    <!--根据企业、部门查询用户-->
+    <select id="getUserByCompanyDept" parameterType="SysUser" resultMap="SysUserResultMap">
+      SELECT * FROM sys_user u WHERE 1=1 AND u.available=1
+        <if test="companyId != null and companyId != ''">
+            AND companyId = #{companyId}
+        </if>
+        <if test="deptId != null and deptId != ''">
+            AND deptId = #{deptId}
+        </if>
+        <if test="id != null and id != ''">
+            AND id != #{id,javaType=String}
+        </if>
+    </select>
+
+    <!--根据登录名查询用户-->
+    <select id="findByLogin" resultMap="SysUserResultMap" parameterType="java.lang.String">
+        SELECT * FROM sys_user WHERE login = #{login}
+    </select>
+    <select id="getSysUserByIds" parameterType="java.util.Arrays" resultMap="SysUserResultMap">
+        SELECT * FROM sys_user WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id,javaType=String}
+        </foreach>
+    </select>
+
+    <!--逻辑删除用户-->
+    <update id="logicDeleteArray" parameterType="java.util.Arrays">
+        UPDATE sys_user SET available = 0 WHERE id IN
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <select id="getSysUserNamesByIds" parameterType="java.util.Arrays" resultMap="SysUserResultMap">
+        SELECT u.id,GROUP_CONCAT(u.username) username,u.companyId FROM sys_user u WHERE u.id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id,javaType=String}
+        </foreach>
+    </select>
+
+    <select id="getUserCountByCompany" parameterType="string" resultType="string">
+       SELECT IFNULL(COUNT(*), 0) FROM sys_user u WHERE 1=1 AND u.available=1
+    </select>
+</mapper>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.infrastructure.dao.system.DistrictMapper">
+    
+    <resultMap id="DistrictResultMap" type="com.infrastructure.entity.system.District">
+        <id column="id" property="id" jdbcType="CHAR" javaType="string"/>
+        <result column="code" property="code" jdbcType="VARCHAR"/>
+        <result column="district" property="district" jdbcType="VARCHAR"/>
+        <result column="level" property="level" jdbcType="SMALLINT"/>
+        <result column="parent" property="parent" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+    id, code, district, level, parent
+    </sql>
+
+    <select id="select" resultMap="DistrictResultMap" parameterType="java.lang.String">
+        select
+        <include refid="BaseColumns"/>
+        from sys_district
+        where id = #{id,jdbcType=CHAR}
+    </select>
+
+    <delete id="delete" parameterType="java.lang.String">
+        delete from sys_district
+        where id = #{id,jdbcType=CHAR}
+    </delete>
+
+    <insert id="insert" parameterType="com.infrastructure.entity.system.District">
+        insert into sys_district
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="code != null">
+                code,
+            </if>
+            <if test="district != null">
+                district,
+            </if>
+            <if test="level != null">
+                level,
+            </if>
+            <if test="parent != null">
+                parent,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id, javaType=string,jdbcType=CHAR},
+            </if>
+            <if test="code != null">
+                #{code,jdbcType=VARCHAR},
+            </if>
+            <if test="district != null">
+                #{district,jdbcType=VARCHAR},
+            </if>
+            <if test="level != null">
+                #{level,jdbcType=SMALLINT},
+            </if>
+            <if test="parent != null">
+                #{parent,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+    
+    <update id="update" parameterType="com.infrastructure.entity.system.District">
+        update sys_district
+        <set>
+            <if test="code != null">
+                code = #{code,jdbcType=VARCHAR},
+            </if>
+            <if test="district != null">
+                district = #{district,jdbcType=VARCHAR},
+            </if>
+            <if test="level != null">
+                level = #{level,jdbcType=SMALLINT},
+            </if>
+            <if test="parent != null">
+                parent = #{parent,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=CHAR}
+    </update>
+
+    <!-- 查找所有地区 -->
+    <select id="findAll" resultMap="DistrictResultMap">
+        select * from sys_district order by code
+    </select>
+
+    <!-- 查找所有下级地区 -->
+    <select id="findChildrens" parameterType="string" resultMap="DistrictResultMap">
+        SELECT  * FROM sys_district where parent = #{code} order by code
+    </select>
+
+    <!-- 根据code查询 -->
+    <select id="queryDistrictByCode" parameterType="com.infrastructure.entity.system.District" resultMap="DistrictResultMap">
+        SELECT * FROM sys_district WHERE code = #{code}
+    </select>
+
+</mapper>

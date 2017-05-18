@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.infrastructure.dao.culture.GroupMapper">
+
+    <resultMap id="ResultGroupMap" type="com.infrastructure.entity.culture.Group">
+        <id column="id" property="id" javaType="string" jdbcType="CHAR"/>
+        <result column="name" property="name"></result>
+        <result column="createDate" property="createDate"></result>
+        <result column="createUser" property="createUser"></result>
+        <result column="companyId" property="companyId"></result>
+        <result column="remark" property="remark"></result>
+        <result column="userName" property="userName"></result>
+        <result column="companyName" property="companyName"></result>
+        <collection property="userList" ofType="SysUser" resultMap="UserResultMap"></collection>
+    </resultMap>
+
+    <resultMap id="UserResultMap" type="com.infrastructure.entity.system.SysUser">
+        <id column="uid" property="id" javaType="string" jdbcType="CHAR"/>
+        <result column="login" property="login" jdbcType="VARCHAR"/>
+        <result column="username" property="username" jdbcType="VARCHAR"/>
+        <result column="password" property="password" jdbcType="CHAR"/>
+        <result column="sex" property="sex" jdbcType="VARCHAR"/>
+        <result column="age" property="age" javaType="Integer"/>
+        <result column="birthday" property="birthday" jdbcType="VARCHAR"/>
+        <result column="phone" property="phone" jdbcType="VARCHAR"/>
+        <result column="email" property="email" jdbcType="VARCHAR"/>
+        <result column="available" property="available" javaType="boolean" jdbcType="BIT"/>
+        <result column="companyId" property="companyId" jdbcType="VARCHAR"/>
+        <result column="companyName" property="companyName" jdbcType="VARCHAR"/>
+        <result column="parentId" property="parentId" jdbcType="VARCHAR"/>
+        <result column="parentName" property="parentName" jdbcType="VARCHAR"/>
+        <result column="creataDate" property="creataDate" jdbcType="VARCHAR"/>
+        <result column="updateDate" property="updateDate" jdbcType="VARCHAR"/>
+        <result column="roleId" property="roleId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+
+    <!--查询我的群组+分页-->
+    <select id="queryGroupPageMy" resultMap="ResultGroupMap" parameterType="Group">
+        SELECT g.*,gu.userId uid,u.username userName,c.`name` companyName FROM groups g
+        JOIN groups_user gu ON g.id = gu.groupId
+        JOIN sys_user u ON g.createUser = u.id
+        JOIN sys_company c ON g.companyId = c.id
+        WHERE gu.userId = #{createUser} AND gu.isDelete = 'N'
+    </select>
+
+    <!--公司群组-->
+    <select id="queryGroupPageCompany" resultMap="ResultGroupMap" parameterType="Group">
+        SELECT g.*,gu.userId uid,u.username userName,c.`name` companyName FROM groups g
+        JOIN sys_user u ON g.createUser = u.id
+        JOIN sys_company c ON g.companyId = c.id
+        LEFT JOIN groups_user gu ON g.id = gu.groupId
+        WHERE g.companyId = #{companyId} AND gu.isDelete = 'N'
+    </select>
+
+    <!--根据ID查询群组信息-->
+    <select id="select" resultMap="ResultGroupMap" parameterType="java.lang.String">
+        SELECT * FROM groups WHERE id = #{id,javaType=String}
+    </select>
+
+    <!--根据群组ID查询成员-->
+    <select id="findGroupIdByUser" resultMap="ResultGroupMap" parameterType="java.lang.String">
+        SELECT g.*,u.id uid,u.username FROM groups g
+        JOIN groups_user gu ON g.id = gu.groupId
+        JOIN sys_user u ON gu.userId = u.id
+        WHERE g.id = #{groupId,javaType=String} AND gu.isDelete = 'N'
+        ORDER BY u.id
+    </select>
+    
+    <!--群组创建-->
+    <insert id="insert" parameterType="Group">
+        INSERT INTO groups (id,name,createDate,createUser,companyId,remark)
+        VALUES (#{id,javaType=String},#{name},#{createDate},#{createUser},#{companyId},#{remark})
+    </insert>
+
+    <!--群组修改-->
+    <update id="update" parameterType="Group">
+        UPDATE groups
+        <set>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="remark != null and remark != ''">remark = #{remark},</if>
+        </set>
+        WHERE id = #{id,javaType=String}
+    </update>
+    
+    <!--群组删除-->
+    <delete id="delete" parameterType="java.lang.String">
+        DELETE FROM groups WHERE id = #{id,javaType=String}
+    </delete>
+</mapper>

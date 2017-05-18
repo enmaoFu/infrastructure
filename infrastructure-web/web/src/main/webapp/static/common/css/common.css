@@ -1,0 +1,8 @@
+.headerFontColor div{
+    color: #f00;
+}
+li{
+    list-style: none;
+}
+.ButtonEdit {width: 116px; height: 17px; border: 1px solid #B7B7B7;box-shadow:0px 2px 2px #fff; padding: 1px; background-image: url(../../My97DatePicker/skin/datePicker.gif);background-repeat: no-repeat;background-position: center right;}
+.ButtonEdit::-ms-clear, .Grid ::-ms-clear{ display: none; }

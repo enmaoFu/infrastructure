@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.infrastructure.dao.system.SelectMapper">
+
+    <resultMap id="SelectResultMap" type="com.infrastructure.entity.system.Select">
+        <id property="id" column="id" javaType="String" />
+        <result property="s_key" column="s_key"></result>
+        <result property="s_val" column="s_val"></result>
+        <result property="s_pkey" column="s_pkey"></result>
+        <result property="s_mark" column="s_mark"></result>
+        <result property="s_remark" column="s_remark"></result>
+        <result property="companyId" column="companyId"></result>
+        <result property="state" column="state"></result>
+    </resultMap>
+    
+    <select id="queryPage" resultMap="SelectResultMap" parameterType="Select">
+        SELECT * FROM sys_select WHERE s_mark = #{s_mark} AND companyId = #{companyId}
+    </select>
+
+    <select id="querySelect" resultMap="SelectResultMap" parameterType="Select">
+        SELECT * FROM sys_select WHERE s_mark = #{s_mark} AND companyId = #{companyId}
+    </select>
+
+    <insert id="insert" parameterType="Select">
+        INSERT INTO sys_select(id,s_key,s_val,s_pkey,s_mark,s_remark,companyId,state)
+        VALUES (#{id,javaType=String},#{s_key,javaType=String},#{s_val},#{s_pkey},#{s_mark},#{s_remark},#{companyId},#{state})
+    </insert>
+
+    <delete id="delete" parameterType="String">
+        DELETE FROM sys_select WHERE id = #{id,javaType=String}
+    </delete>
+
+    <update id="update" parameterType="com.infrastructure.entity.system.Select">
+        update sys_select
+        <set>
+            <if test="s_val != null">
+                s_val = #{s_val,jdbcType=VARCHAR},
+            </if>
+            <if test="s_remark != null">
+                s_remark = #{s_remark,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id, javaType=string}
+    </update>
+
+</mapper>

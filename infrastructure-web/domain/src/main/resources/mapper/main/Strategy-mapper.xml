@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.infrastructure.dao.main.StrategyMapper">
+
+    <resultMap id="ResultStrategyMap" type="com.infrastructure.entity.main.Strategy">
+        <id column="id" property="id" javaType="string" jdbcType="CHAR"/>
+        <result column="content" property="content"></result>
+        <result column="companyId" property="companyId"></result>
+    </resultMap>
+
+    <!--查询我创建的申请-->
+    <select id="select" resultMap="ResultStrategyMap" parameterType="Strategy">
+        SELECT * FROM strategy WHERE companyId = #{companyId}
+    </select>
+
+    <insert id="insert" parameterType="Strategy">
+        INSERT INTO strategy (id,content,companyId) VALUES (#{id,javaType=String},#{content},#{companyId})
+    </insert>
+
+    <update id="update" parameterType="Strategy">
+        UPDATE strategy 
+        <set>
+            <if test="content != null and content != ''">content = #{content}</if>
+        </set>
+        WHERE id = #{id,javaType=String}
+    </update>
+</mapper>

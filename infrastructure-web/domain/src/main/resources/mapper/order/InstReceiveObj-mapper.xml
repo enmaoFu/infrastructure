@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.infrastructure.dao.order.InstReceiveObjMapper" >
+  <resultMap id="InstReceiveObjResultMap" type="com.infrastructure.entity.order.InstReceiveObj" >
+    <id column="id" property="id" jdbcType="VARCHAR" />
+    <result column="instId" property="instid" jdbcType="VARCHAR" />
+    <result column="userId" property="userid" jdbcType="VARCHAR" />
+    <result column="parentId" property="parentid" jdbcType="VARCHAR" />
+    <result column="forward" property="forward" jdbcType="VARCHAR" />
+    <result column="user_name" property="userName" jdbcType="VARCHAR" />
+    <result column="inst_name" property="instName" jdbcType="VARCHAR" />
+    <result property="createtime" column="createTime" jdbcType="TIMESTAMP"></result>
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, instId, userId, parentId, forward
+  </sql>
+  <!-- 新增接收对象-->
+  <insert id="insert" parameterType="com.infrastructure.entity.order.InstReceiveObj" >
+    insert into inst_receive_obj (id, instId, userId, 
+      parentId, forward,createtime)
+    values
+    <foreach collection="list" item="item" index="index" separator="," >
+      (#{item.id,jdbcType=VARCHAR}, #{item.instid,jdbcType=VARCHAR}, #{item.userid,jdbcType=VARCHAR},
+      #{item.parentid,jdbcType=VARCHAR}, #{item.forward,jdbcType=VARCHAR}, SYSDATE())
+    </foreach>
+  </insert>
+
+  <!-- 修改接收对象-->
+  <update id="update" parameterType="com.infrastructure.entity.order.InstReceiveObj" >
+    update inst_receive_obj
+    <set >
+      <if test="instid != null" >
+        instId = #{instid,jdbcType=VARCHAR},
+      </if>
+      <if test="userid != null" >
+        userId = #{userid,jdbcType=VARCHAR},
+      </if>
+      <if test="parentid != null" >
+        parentId = #{parentid,jdbcType=VARCHAR},
+      </if>
+      <if test="forward != null" >
+        forward = #{forward,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id, javaType=string}
+  </update>
+
+  <!--批量接收对象-->
+  <delete id="deleteBatch">
+    DELETE FROM inst_receive_obj WHERE instid IN
+    <foreach collection="array" item="id" open="(" separator="," close=")">
+      #{id}
+    </foreach>
+  </delete>
+
+  <!-- 查找接收对象 -->
+  <select id="queryList" resultMap="InstReceiveObjResultMap" resultType="com.infrastructure.entity.order.InstReceiveObj">
+    SELECT
+    c.id,
+    c.instId,
+    c.userId,
+    c.parentId,
+    c.forward,
+    u.username user_name,
+    uu.username inst_name
+    FROM
+    inst_receive_obj c
+    INNER JOIN sys_user u
+      ON c.userId = u.id
+    LEFT JOIN sys_user uu
+      ON c.parentId = uu.id
+    INNER JOIN instructions i
+      ON i.id = c.instId
+    WHERE 1 = 1 ${where}
+  </select>
+
+  <!-- 获取接收对象 -->
+  <select id="getById" resultMap="InstReceiveObjResultMap" parameterType="java.lang.String">
+    SELECT
+    c.id,
+    c.instId,
+    c.userId,
+    c.parentId,
+    c.forward,
+    u.username user_name,
+    uu.username inst_name
+    FROM
+    inst_receive_obj c
+    INNER JOIN sys_user u
+    ON c.userId = u.id
+    LEFT JOIN sys_user uu
+    ON c.parentId = uu.id
+    INNER JOIN instructions i
+    ON i.id = c.instId
+    <where>
+      c.id = #{id, javaType=string}
+  </where>
+  </select>
+</mapper>

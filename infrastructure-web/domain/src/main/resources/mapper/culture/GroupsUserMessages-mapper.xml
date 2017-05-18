@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.infrastructure.dao.culture.GroupsUserMessagesMapper">
+
+    <resultMap id="MessagesResultMap" type="com.infrastructure.entity.culture.GroupsUserMessages">
+        <id column="id" property="id" javaType="string" jdbcType="CHAR"/>
+        <result column="group_user_id" property="group_user_id"></result>
+        <result column="content" property="content"></result>
+        <result column="sendDate" property="sendDate"></result>
+        <result column="userName" property="userName"></result>
+    </resultMap>
+
+    <!--查询群组消息记录-->
+    <select id="queryMessage" resultMap="MessagesResultMap" parameterType="java.lang.String">
+        SELECT gum.id,u.username userName,gum.content,gum.sendDate FROM groups_user gu
+        JOIN groups_user_messages gum ON gu.id = gum.group_user_id
+        JOIN sys_user u ON gu.userId = u.id
+        WHERE gu.groupId = #{groupId} AND gu.isDelete = 'N'
+        ORDER BY sendDate
+        LIMIT 0,500
+    </select>
+
+    <insert id="insert" parameterType="GroupsUserMessages">
+        INSERT INTO groups_user_messages (id,group_user_id,content,sendDate)
+        VALUES (#{id,javaType=String},#{group_user_id},#{content},#{sendDate})
+    </insert>
+
+    <!--根据群组用户ID删除消息记录-->
+    <delete id="deleteArray" parameterType="java.util.List">
+        DELETE FROM groups_user_messages WHERE group_user_id IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id,javaType=String}
+        </foreach>
+    </delete>
+
+</mapper>

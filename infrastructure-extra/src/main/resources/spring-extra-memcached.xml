@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:cache="http://www.springframework.org/schema/cache"
+       xsi:schemaLocation="
+           http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.springframework.org/schema/cache
+           http://www.springframework.org/schema/cache/spring-cache.xsd">
+
+    <cache:annotation-driven cache-manager="cacheManager" key-generator="keyGenerator" proxy-target-class="true" />
+
+    <!-- 配置 Memcached 的缓存服务器 -->
+    <bean id="memcachedClientBuilder" class="net.rubyeye.xmemcached.XMemcachedClientBuilder">
+        <constructor-arg>
+            <list>
+                <bean class="java.net.InetSocketAddress">
+                    <constructor-arg value="localhost" />
+                    <constructor-arg value="11211" />
+                </bean>
+            </list>
+        </constructor-arg>
+        <property name="connectionPoolSize" value="5"/>
+        <property name="commandFactory">
+            <bean class="net.rubyeye.xmemcached.command.BinaryCommandFactory"/>
+        </property>
+        <property name="transcoder">
+            <bean class="net.rubyeye.xmemcached.transcoders.SerializingTranscoder" />
+        </property>
+    </bean>
+    <bean id="memcachedClient" factory-bean="memcachedClientBuilder" factory-method="build" destroy-method="shutdown" />
+
+    <bean id="cacheManager" class="org.springframework.cache.MemcachedCacheManager">
+        <property name="memcachedClient" ref="memcachedClient" />
+        <property name="expireMap">
+            <map>
+                <!-- key：@Cacheable、@CachePut、@CacheEvict等的name属性。value：缓存过期时间(单位：秒)，默认值：0 -->
+                <entry key="user" value="60" />
+            </map>
+        </property>
+    </bean>
+
+    <bean id="keyGenerator" class="org.springframework.cache.interceptor.SimpleKeyGenerator" />
+</beans>

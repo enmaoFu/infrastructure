@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.infrastructure.dao.main.AnnOrMeetMapper">
+
+    <resultMap id="ResultAnnOrMeetMap" type="com.infrastructure.entity.main.AnnOrMeet">
+        <id column="id" property="id" javaType="string" jdbcType="CHAR"/>
+        <result column="title" property="title"></result>
+        <result column="content" property="content"></result>
+        <result column="releaseTime" property="releaseTime"></result>
+        <result column="companyId" property="companyId"></result>
+        <result column="aType" property="aType"></result>
+        <result column="isView" property="isView"></result>
+        <result column="msId" property="msId"></result>
+        <result column="flg" property="flg"></result>
+        <result column="abbreviation" property="abbreviation"></result>
+        <association property="sysFile" javaType="SysFile" resultMap="ResultSysFileMap"></association>
+    </resultMap>
+
+    <resultMap id="ResultSysFileMap" type="com.infrastructure.entity.system.SysFile">
+        <id column="fid" property="id" javaType="string" jdbcType="CHAR" />
+        <result column="attachmentId" property="attachmentId"></result>
+        <result column="originalFileName" property="originalFileName"></result>
+        <result column="nowFileName" property="nowFileName"></result>
+        <result column="suff" property="suff"></result>
+    </resultMap>
+
+    <select id="queryAnnOrMeet" resultMap="ResultAnnOrMeetMap" parameterType="AnnOrMeet">
+      SELECT * FROM (
+        SELECT '1' aType,an.id,an.title,com.abbreviation,an.releaseTime releaseTime,iv.isView,'' msId,'' flg
+        FROM announcement an
+        JOIN sys_company com ON com.id = an.companyId
+        LEFT JOIN is_view iv ON iv.viewId = an.id AND iv.userId = #{userId}
+        WHERE (an.companyId = #{companyId} AND an.arange = 'my' )
+        OR (
+            com.id IN (SELECT id FROM sys_company WHERE id = #{parentId} OR parents LIKE CONCAT('%',#{parentId},'%')) AND an.arange = 'all'
+        )
+        UNION ALL
+        SELECT '2' aType,mm.id,mm.title,c.abbreviation,mm.create_time releaseTime,iv.isView,ms.id msId,ms.look_flg flg
+        FROM meeting_sub ms
+        JOIN meeting_main mm ON ms.main_id = mm.id
+        JOIN sys_user u ON u.id = mm.create_user
+        JOIN sys_company c ON u.companyId = c.id
+        LEFT JOIN is_view iv ON mm.id = iv.viewId AND iv.userId = #{userId}
+        WHERE ms.join_user = #{userId} AND mm.end_flg = 'N'
+      ) t ORDER BY t.releaseTime DESC
+    </select>
+</mapper>
